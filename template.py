@@ -24,4 +24,5 @@ if __name__ == '__main__':
 # Post coding
 #
 # pylint <script>.py
+#   Score should be >= 8.0
 #
