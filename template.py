@@ -32,7 +32,7 @@ __version__ = '0.0.1'
     '''<description>'''
     # Do stuff...
 
-def main():
+def main(args):
     '''<description>'''
     # Do stuff...
 
