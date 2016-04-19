@@ -1,16 +1,10 @@
 #!/usr/bin/env python
 ####################################################################################################
-'''
-Simple program which takes a moderately involved Python list and outputs it in YAML and JSON
-format
-'''
+'''Simple program which takes a moderately involved Python list and outputs it in YAML format.'''
 
 # Imports
 import argparse
 import yaml
-
-# For reading from files
-import exercise7
 
 # Globals
 BASE_FILE = 'example'
@@ -44,9 +38,11 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbose', action='store_true', help='display verbose output')
     args = parser.parse_args()
 
-    dict1 = {'ADDRESS': '1.2.3.4', 'USERNAME': 'test', 'PASSWORD': 'pass'}
+    router1 = {'ADDRESS': '1.2.3.4', 'SNMP_COMMUNITY': 'public1', 'SNMP_PORT': '161'}
+    router2 = {'ADDRESS': '1.2.3.5', 'SNMP_COMMUNITY': 'public2', 'SNMP_PORT': '8161'}
+    router_list = [router1, router2]
 
-    yaml_output(dict1, False)
+    yaml_output(router_list, False)
 
     if args.verbose:
         print 'Example list:\n{}'.format(data1)
