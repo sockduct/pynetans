@@ -36,8 +36,9 @@ def main(args):
     '''<description>'''
     # Do stuff...
 
+# Call main and put all logic there per best practices.
+# No triple quotes here because not a function!
 if __name__ == '__main__':
-    '''Call main and put all logic there per best practices.'''
     sys.exit(main(sys.argv[1:]) or 0)
 
 
