@@ -4,19 +4,21 @@
 sysDescr OIDs and print them out.
 '''
 
-# Imports
+# Primary Imports
 # Delete unused lines/comments!
 import argparse
 import os
-from snmp_helper import snmp_get_oid, snmp_extract
 import sys
 import yaml
+
+# 3rd Party Imports
+from snmp_helper import snmp_get_oid, snmp_extract
 
 # Globals
 ROUTER_FILE = 'routers.yaml'
 # sysName, sysDescr
-SNMP_OIDs = [ {'id': '1.3.6.1.2.1.1.5.0', 'obj': 'sysName'},
-            {'id': '1.3.6.1.2.1.1.1.0', 'obj': 'sysDescr'} ]
+SNMP_OIDs = [{'id': '1.3.6.1.2.1.1.5.0', 'obj': 'sysName'},
+             {'id': '1.3.6.1.2.1.1.1.0', 'obj': 'sysDescr'}]
 
 # Metadata
 __author__ = 'James R. Small'
@@ -65,7 +67,7 @@ def main(args):
     for router in myrouters:
         snmp_info = (router['ADDRESS'], router['SNMP_COMMUNITY'], router['SNMP_PORT'])
         print '{} [{}:{}]:'.format(router['HOSTNAME'], router['ADDRESS'],
-            router['SNMP_PORT'])
+                                   router['SNMP_PORT'])
         for tgt_oid_info in SNMP_OIDs:
             result = snmp_query(snmp_info, tgt_oid_info['id'])
             print '{} ({}) ='.format(tgt_oid_info['obj'], tgt_oid_info['id']),
@@ -74,14 +76,7 @@ def main(args):
             print '{}'.format(result)
         print ''
 
+# Call main and put all logic there per best practices.
 if __name__ == '__main__':
-    '''Call main and put all logic there per best practices.'''
     sys.exit(main(sys.argv[1:]) or 0)
 
-
-####################################################################################################
-# Post coding
-#
-# pylint <script>.py
-#   Score should be >= 8.0
-#
