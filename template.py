@@ -12,8 +12,8 @@
 
 # Metadata
 __author__ = 'James R. Small'
-__contact__ = 'james<period>r<period>small<at>outlook<period>com'
-__date__ = 'Month day, Year'
+__contact__ = 'james<dot>r<dot>small<at>outlook<dot>com'
+__date__ = 'Month Day, Year'
 __version__ = '0.0.1'
 
 
