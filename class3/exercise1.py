@@ -17,16 +17,26 @@ import time
 import yaml
 
 # Local Imports
-import email_helper
+from email_helper import send_mail
 import snmp_helper
+import termcolor
 
 # Globals
-POLL_INTERVAL = 30  # How many seconds between each polling attempt
+CONFIG_CHANGES = {'ccmHistoryRunningLastChanged': 'running-config changed',
+                  'ccmHistoryRunningLastSaved': 'running-config saved',
+                  'ccmHistoryStartupLastChanged': 'startup-config changed'}
+POLL_INTERVAL = 300  # How many seconds between each polling attempt
+RECIPIENT = 'jsmall@localhost'
 ROUTER_FILE = 'routers.yaml'
+SENDER = 'class3.exercise1@localhost'
+SNMP_MARK = 'sysUpTime'  # Offset from this used to measure change time
 SNMP_TARGETS = OrderedDict([('sysUpTime', '1.3.6.1.2.1.1.3.0'),
                             ('ccmHistoryRunningLastChanged', '1.3.6.1.4.1.9.9.43.1.1.1.0'),
                             ('ccmHistoryRunningLastSaved', '1.3.6.1.4.1.9.9.43.1.1.2.0'),
                             ('ccmHistoryStartupLastChanged', '1.3.6.1.4.1.9.9.43.1.1.3.0')])
+#SNMP_TRACK = 'ccmHistory'  # Only track changes in SNMP TARGETS starting with this prefix
+SNMP_TRACK = 'ccmHistoryRunning'  # Only track changes in SNMP TARGETS starting with this prefix
+SUBJECT = 'Alert - router configuration change'
 WORKING_FILE = 'exercise1.data'
 
 # Metadata
@@ -94,24 +104,80 @@ def main(args):
         for router in myrouters:
             # Start time of poll sequence for router
             now = datetime.datetime.today()
+            router_config_changed = False
+            change_output = ''
             print 'Router {} - Poll start time {}:'.format(router['HOSTNAME'], now)
             if router['HOSTNAME'] not in router_cfg_times:
                 router_cfg_times[router['HOSTNAME']] = OrderedDict([('LAST_POLLTIME', now),
-                                                                    ('CHECK_TIMES', False])
+                                                                    ('CHECK_TIMES', False)])
             else:
+                router_cfg_times[router['HOSTNAME']]['LAST_POLLTIME'] = now
                 router_cfg_times[router['HOSTNAME']]['CHECK_TIMES'] = True
             for snmp_target in SNMP_TARGETS:
                 snmp_result = get_snmp_data((router['ADDRESS'], router['SNMP_PORT']),
                                   (router['SNMP_USER'], router['SNMP_AUTH'], router['SNMP_KEY']),
                                   SNMP_TARGETS[snmp_target])
                 # If check_times then need to compare new and old...
-                router_cfg_times[router['HOSTNAME']][snmp_target] = snmp_result
+                if router_cfg_times[router['HOSTNAME']]['CHECK_TIMES']:
+                    # Only track changes that start with SNMP_TRACK
+                    if SNMP_TRACK in snmp_target:
+                        if router_cfg_times[router['HOSTNAME']][snmp_target] < snmp_result:
+                            router_config_changed = True
+                            router_cfg_times[router['HOSTNAME']][snmp_target+'_CHANGED'] = True
+                            diff_uptime = int(
+                                router_cfg_times[router['HOSTNAME']][SNMP_MARK]) - int(snmp_result)
+                            # diff_uptime is in ticks, convert to seconds
+                            systime = time.time() - (diff_uptime/100)
+                            systimestr = time.strftime("%a, %b %d %Y %H:%M:%S", time.localtime(
+                                systime))
+                            router_cfg_times[router['HOSTNAME']][snmp_target] = snmp_result
+                            diff_datetime = timeticks_to_datetime(diff_uptime)
+                            change_output += '{} ({}) changed {} ({}) ago\n'.format(
+                                CONFIG_CHANGES[snmp_target], snmp_target, diff_datetime,
+                                diff_uptime)
+                            change_output += 'Change occurred at {} local system time'.format(
+                                systimestr)
+                        elif router_cfg_times[router['HOSTNAME']][snmp_target] > snmp_result:
+                            sys.exit(
+                                'Error: {} on {} decreased in value, something went wrong.'.format(
+                                snmp_target, router['HOSTNAME']))
+                        else:
+                            router_cfg_times[router['HOSTNAME']][snmp_target+'_CHANGED'] = False
+                    else:
+                        router_cfg_times[router['HOSTNAME']][snmp_target] = snmp_result
+                else:
+                    router_cfg_times[router['HOSTNAME']][snmp_target] = snmp_result
                 # Output data - should put this into a class with a print/string method
-                snmp_result_formatted = timeticks_to_datetime(snmp_result)
-                print '{} ({}):  {} ({})'.format(snmp_target, SNMP_TARGETS[snmp_target],
-                                                 snmp_result_formatted, snmp_result)
+                if args.verbose:
+                    snmp_result_formatted = timeticks_to_datetime(snmp_result)
+                    print '{} ({}):  {} ({})'.format(snmp_target, SNMP_TARGETS[snmp_target],
+                        snmp_result_formatted, router_cfg_times[router['HOSTNAME']][snmp_target])
+            # Was there a config change in the router?
+            if router_config_changed:
+                message = '\nChanges detected on {}:\n{}'.format(router['HOSTNAME'],
+                    change_output)
+                if os.name == 'posix':
+                    termcolor.cprint(message, 'yellow', attrs=['blink'])
+                else:
+                    # termcolor doesn't work on Windows, at least not from PowerShell
+                    print message
+                print 'Sending notification to {}'.format(RECIPIENT)
+                subject_add = ' on {}'.format(router['HOSTNAME'])
+                send_mail(RECIPIENT, SUBJECT+subject_add, message, SENDER)
             print ''
-        time.sleep(POLL_INTERVAL)
+        if args.verbose:
+            del_str = '\b' * 24
+            count = POLL_INTERVAL
+            while count > 0:
+                print '{}Sleeping for {:>6}...'.format(del_str, count),
+                # Doesn't display correctly in Linux without this:
+                sys.stdout.flush()
+                count -= 1
+                time.sleep(1)
+            print '\n'
+        else:
+            print 'Sleeping for {}...\n'.format(POLL_INTERVAL),
+            time.sleep(POLL_INTERVAL)
 
 # Call main and put all logic there per best practices.
 # No triple quotes here because not a function!
