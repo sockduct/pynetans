@@ -13,6 +13,7 @@ import datetime
 import os
 import pickle
 import sys
+import time
 import yaml
 
 # Local Imports
@@ -20,10 +21,12 @@ import email_helper
 import snmp_helper
 
 # Globals
+POLL_INTERVAL = 30  # How many seconds between each polling attempt
 ROUTER_FILE = 'routers.yaml'
-SNMP_TARGETS = OrderedDict([('ccmHistoryRunningLastChanged', '1.3.6.1.4.1.9.9.43.1.1.1.0'),
-                ('ccmHistoryRunningLastSaved', '1.3.6.1.4.1.9.9.43.1.1.2.0'),
-                ('ccmHistoryStartupLastChanged', '1.3.6.1.4.1.9.9.43.1.1.3.0')])
+SNMP_TARGETS = OrderedDict([('sysUpTime', '1.3.6.1.2.1.1.3.0'),
+                            ('ccmHistoryRunningLastChanged', '1.3.6.1.4.1.9.9.43.1.1.1.0'),
+                            ('ccmHistoryRunningLastSaved', '1.3.6.1.4.1.9.9.43.1.1.2.0'),
+                            ('ccmHistoryStartupLastChanged', '1.3.6.1.4.1.9.9.43.1.1.3.0')])
 WORKING_FILE = 'exercise1.data'
 
 # Metadata
@@ -77,6 +80,8 @@ def main(args):
         '-f', '--file', help='specify YAML file to read router info from', default=ROUTER_FILE)
     args = parser.parse_args()
 
+    # Working data structure
+    router_cfg_times = {}
     myrouters = yaml_input(args.file)
     #
     #print 'SNMP_TARGETS = {}'.format(SNMP_TARGETS)
@@ -84,19 +89,29 @@ def main(args):
     #    print '{} = {}'.format(t, SNMP_TARGETS[t])
     #sys.exit()
     #
-    for router in myrouters:
-        # Start time of poll sequence for router
-        now = datetime.datetime.today()
-        print 'Router {} - Poll start time {}:'.format(router['HOSTNAME'], now)
-        for snmp_target in SNMP_TARGETS:
-            snmp_result = get_snmp_data((router['ADDRESS'], router['SNMP_PORT']),
-                              (router['SNMP_USER'], router['SNMP_AUTH'], router['SNMP_KEY']),
-                              SNMP_TARGETS[snmp_target])
-            # Output data
-            snmp_result_formatted = timeticks_to_datetime(snmp_result)
-            print '{} ({}):  {} ({})'.format(snmp_target, SNMP_TARGETS[snmp_target],
-                                             snmp_result_formatted, snmp_result)
-        print ''
+    # Keeping polling every POLL_INTERVAL forever
+    while True:
+        for router in myrouters:
+            # Start time of poll sequence for router
+            now = datetime.datetime.today()
+            print 'Router {} - Poll start time {}:'.format(router['HOSTNAME'], now)
+            if router['HOSTNAME'] not in router_cfg_times:
+                router_cfg_times[router['HOSTNAME']] = OrderedDict([('LAST_POLLTIME', now),
+                                                                    ('CHECK_TIMES', False])
+            else:
+                router_cfg_times[router['HOSTNAME']]['CHECK_TIMES'] = True
+            for snmp_target in SNMP_TARGETS:
+                snmp_result = get_snmp_data((router['ADDRESS'], router['SNMP_PORT']),
+                                  (router['SNMP_USER'], router['SNMP_AUTH'], router['SNMP_KEY']),
+                                  SNMP_TARGETS[snmp_target])
+                # If check_times then need to compare new and old...
+                router_cfg_times[router['HOSTNAME']][snmp_target] = snmp_result
+                # Output data - should put this into a class with a print/string method
+                snmp_result_formatted = timeticks_to_datetime(snmp_result)
+                print '{} ({}):  {} ({})'.format(snmp_target, SNMP_TARGETS[snmp_target],
+                                                 snmp_result_formatted, snmp_result)
+            print ''
+        time.sleep(POLL_INTERVAL)
 
 # Call main and put all logic there per best practices.
 # No triple quotes here because not a function!
