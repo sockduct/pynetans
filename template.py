@@ -5,7 +5,8 @@
 
 # Imports
 # Delete unused lines/comments!
-#import sys
+# Need sys because using it to call main with arguments
+import sys
 
 # Globals
 #BASE_FILE = 'file1'
