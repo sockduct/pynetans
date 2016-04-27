@@ -19,14 +19,14 @@ __version__ = '0.0.1'
 
 
 #class Myclass1(object):
-    #'''<description>'''
+    '''<description>'''
 
     #__init__(self, param1):
-    #    '''<description>'''
+        '''<description>'''
     #    self.param1 = param1
 
     #method1(self, param1):
-    #    '''<description>'''
+        '''<description>'''
     #    pass
 
 #def func1(param1):
