@@ -25,7 +25,8 @@ import snmp_helper
 CONFIG_CHANGES = {'ccmHistoryRunningLastChanged': 'running-config changed',
                   'ccmHistoryRunningLastSaved': 'running-config saved',
                   'ccmHistoryStartupLastChanged': 'startup-config changed'}
-OUTPUT_FILE = 'routers.pkl'
+#OUTPUT_FILE = ''  # Use default of empty string for stdout, allow user to specify file from CLI
+#OUTPUT_FILE = 'routers.pkl'  # Decided better to just read from CLI
 #OUTPUT_FILE_BASE = 'routers'
 POLL_INTERVAL = 300  # How many seconds between each polling attempt
 RECIPIENT = 'jsmall@localhost'
@@ -39,13 +40,12 @@ SNMP_TARGETS = OrderedDict([('sysUpTime', '1.3.6.1.2.1.1.3.0'),
 #SNMP_TRACK = 'ccmHistory'  # Only track changes in SNMP TARGETS starting with this prefix
 SNMP_TRACK = 'ccmHistoryRunning'  # Only track changes in SNMP TARGETS starting with this prefix
 SUBJECT = 'Alert - router configuration change'
-WORKING_FILE = 'exercise1.data'
 
 # Metadata
 __author__ = 'James R. Small'
 __contact__ = 'james<dot>r<dot>small<at>outlook<dot>com'
 __date__ = 'April 23, 2016'
-__version__ = '0.0.1'
+__version__ = '0.0.3'
 
 
 #class Myclass1(object):
@@ -80,17 +80,15 @@ def get_snmp_data(snmp_device, snmp_auth, oid):
     data = snmp_helper.snmp_extract(result)
     return data
 
-def poll_device(routers, router_cfg_times, verbose=False):
+def poll_device(routers, router_cfg_times, verbose=False, quiet=False):
     '''Poll router(s) for specified data.'''
-    # Working data structure
-    router_cfg_times = {}
-
     for router in routers:
         # Start time of poll sequence for router
         now = datetime.datetime.today()
         router_config_changed = False
         change_output = ''
-        print 'Router {} - Poll start time {}:'.format(router['HOSTNAME'], now)
+        if not quiet:
+            print 'Router {} - Poll start time {}:'.format(router['HOSTNAME'], now)
         if router['HOSTNAME'] not in router_cfg_times:
             router_cfg_times[router['HOSTNAME']] = OrderedDict([('LAST_POLLTIME', now),
                                                                 ('CHECK_TIMES', False)])
@@ -140,42 +138,78 @@ def poll_device(routers, router_cfg_times, verbose=False):
         if router_config_changed:
             message = '\nChanges detected on {}:\n{}'.format(router['HOSTNAME'],
                 change_output)
-            if os.name == 'posix':
-                termcolor.cprint(message, 'yellow', attrs=['blink'])
-            else:
-                # termcolor doesn't work on Windows, at least not from PowerShell
-                print message
-            print 'Sending notification to {}'.format(RECIPIENT)
+            if not quiet:
+                if os.name == 'posix':
+                    termcolor.cprint(message, 'yellow', attrs=['blink'])
+                else:
+                    # termcolor doesn't work on Windows, at least not from PowerShell
+                    print message
+                print 'Sending notification to {}'.format(RECIPIENT)
             subject_add = ' on {}'.format(router['HOSTNAME'])
             send_mail(RECIPIENT, SUBJECT+subject_add, message, SENDER)
-        print ''
+        else:
+            if not quiet:
+                print 'No changes detected on {}.'.format(router['HOSTNAME'])
+        if not quiet:
+            print ''
 
-        return router_cfg_times
+    return router_cfg_times
 
+####################################################################################################
 def main(args):
-    '''Acquire necessary input options, retrieve SNMP info, and... ???
-    '''
+    '''Acquire necessary input options, call to retrieve SNMP info, process per CLI args.'''
     parser = argparse.ArgumentParser(
         description='Poll specified router(s) to detect configuration changes')
     parser.add_argument('--version', action='version', version=__version__)
-    parser.add_argument(
-        '-v', '--verbose', action='store_true', help='display verbose output', default=False)
-    parser.add_argument('-f', '--file', help='specify YAML file to read router info from',
+    parser.add_argument('-d', '--datafile', help='specify YAML file to read router info from',
         default=ROUTER_FILE)
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-r', '--realtime', action='store_true',
+    parser.add_argument('-r', '--read',
+        help='specify output file to load (from previous run of program - default is to start ' + \
+            'from scratch)')
+    group1 = parser.add_mutually_exclusive_group()
+    group1.add_argument('-v', '--verbose', action='store_true', help='display verbose output',
+        default=False)
+    group1.add_argument('-q', '--quiet', action='store_true',
+        help="don't display output (requires -w)", default=False)
+    group2 = parser.add_mutually_exclusive_group()
+    group2.add_argument('-c', '--continuous', action='store_true',
         help='run forever and keep polling every {} seconds (default)'.format(POLL_INTERVAL),
         default=True)
-    group.add_argument('-o', '--output', help='specify file to write results to',
-        default=OUTPUT_FILE)
+    group2.add_argument('-o', '--once', action='store_true',
+        help='poll once and display results', default=False)
+    parser.add_argument('-w', '--write', help='specify file to write results to (implies -o)')
     args = parser.parse_args()
 
-    myrouters = yaml_input(args.file)
+    # Sanity checks
+    if args.quiet and not args.write:
+        sys.exit('Error:  quiet option specified without output file (-w)')
+    elif args.write and not args.once:
+        print 'Notice:  {} specified as output file - assuming once option (use -ow {} to ' + \
+            'avoid this message)'.format(args.write, args.write)
+        args.once = True
+
+    myrouters = yaml_input(args.datafile)
+    # Working data structure
     myrouter_cfg_times = {}
-    if args.realtime:
+    if args.read:
+        if args.verbose:
+            print 'Reading in previous output data from {}...'.format(args.read)
+        with open(args.write, 'wb') as outfile:
+            pickle.dump(myrouter_cfg_times, outfile)
+    if args.once:
+        if args.verbose:
+            print 'Poll once and display results selected.'
+        myrouter_cfg_times = poll_device(myrouters, myrouter_cfg_times, args.verbose, args.quiet)
+        with open(args.write, 'wb') as outfile:
+            pickle.dump(myrouter_cfg_times, outfile)
+    # args.continuous == True implied
+    else:
+        if args.verbose:
+            print 'Real-time monitoring selected.'
         # Keep polling every POLL_INTERVAL forever
         while True:
-            myrouter_cfg_times = poll_device(myrouters, myrouter_cfg_times, args.verbose)
+            myrouter_cfg_times = poll_device(myrouters, myrouter_cfg_times, args.verbose,
+                args.quiet)
             if args.verbose:
                 del_str = '\b' * 24
                 count = POLL_INTERVAL
@@ -189,10 +223,6 @@ def main(args):
             else:
                 print 'Sleeping for {}...\n'.format(POLL_INTERVAL),
                 time.sleep(POLL_INTERVAL)
-    else:
-        myrouter_cfg_times = poll_device(myrouters, myrouter_cfg_times, args.verbose)
-        with open(args.output, 'wb') as outfile:
-            pickle.dump(myrouter_cfg_times, outfile)
 
 
 # Call main and put all logic there per best practices.
@@ -205,8 +235,6 @@ if __name__ == '__main__':
 #
 # To do:
 # * Need option to read in outputted pickle file
-# * How to use default file name for output file?
-# * Default realtime doesn't work right - if specify -o still does realtime...
 #
 ####################################################################################################
 # Post coding
