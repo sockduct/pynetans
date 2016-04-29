@@ -10,6 +10,7 @@
 import argparse
 from collections import OrderedDict
 import datetime
+import json
 import os
 import pickle
 import sys
@@ -40,24 +41,14 @@ SNMP_TARGETS = OrderedDict([('sysUpTime', '1.3.6.1.2.1.1.3.0'),
 #SNMP_TRACK = 'ccmHistory'  # Only track changes in SNMP TARGETS starting with this prefix
 SNMP_TRACK = 'ccmHistoryRunning'  # Only track changes in SNMP TARGETS starting with this prefix
 SUBJECT = 'Alert - router configuration change'
+YAML_BOF = '---\n'
 
 # Metadata
 __author__ = 'James R. Small'
 __contact__ = 'james<dot>r<dot>small<at>outlook<dot>com'
 __date__ = 'April 23, 2016'
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
-
-#class Myclass1(object):
-    #'''<description>'''
-
-    #__init__(self, param1):
-    #    '''<description>'''
-    #    self.param1 = param1
-
-    #method1(self, param1):
-    #    '''<description>'''
-    #    pass
 
 def yaml_input(file1):
     '''Read in router/switch authentication information from YAML file.'''
@@ -67,6 +58,52 @@ def yaml_input(file1):
         return data1
     else:
         sys.exit('Invalid filename {}'.format(file1))
+
+def read_data(infile, file_format, infile_format, verbose=False):
+    '''Read in router data from specified file.  Support Python pickle format, yaml format or
+    json format and return data structure.'''
+    if infile_format:
+        read_format = infile_format
+    else
+        read_format = file_format
+
+    if verbose:
+        print 'Reading in previous output as {} formatted data from {}...'.format(read_format,
+            infile)
+    with open(infile, 'rb') as file1:
+        if read_format == 'native':
+            router_cfg_times = pickle.load(file1)
+        elif read_format == 'yaml':
+            router_cfg_times = yaml.load(file1)
+        elif read_format == 'json':
+            router_cfg_times = json.load(file1)
+        else:
+            sys.exit('Unsupported file format {}.'.format(read_format)
+    if verbose:
+        print 'Working data set now:\n{}'.format(router_cfg_times)
+
+    return router_cfg_times
+
+def write_data(outfile, file_format, outfile_format, yaml_format=True, verbose=False):
+    '''Write router data from specified file.  Support Python pickle format, yaml format or
+    json format and return data structure.'''
+    if outfile_format:
+        write_format = outfile_format
+    else
+        write_format = file_format
+
+    if verbose:
+        print 'Writing output as {} formatted data to {}...'.format(write_format, outfile)
+    with open(outfile, 'wb') as file1:
+        if write_format == 'native':
+            pickle.dump(router_cfg_times, file1)
+        elif write_format == 'yaml':
+            file1.write(YAML_BOF)
+            file1.write(yaml.dump(router_cfg_times, default_flow_style=yaml_format)
+        elif write_format == 'json':
+            json.dump(router_cfg_times, file1)
+        else:
+            sys.exit('Unsupported file format {}.'.format(write_format)
 
 def timeticks_to_datetime(ticks):
     '''Convert SNMP timeticks (1/100 of second) to datetime value'''
@@ -178,30 +215,35 @@ def main(args):
     group2.add_argument('-o', '--once', action='store_true',
         help='poll once and display results', default=False)
     parser.add_argument('-w', '--write', help='specify file to write results to (implies -o)')
+    parser.add_argument('-f', '--format', help='specify input/output file format - native ' + \
+        '(Python pickle - default if not specified) | yaml | json', default='native')
+    parser.add_argument('--informat', help='specify input file format - native ' + \
+        '(Python pickle) | yaml | json - (takes precedence over -f)')
+    parser.add_argument('--outformat', help='specify output file format - native ' + \
+        '(Python pickle) | yaml | json - (takes precedence over -f)')
     args = parser.parse_args()
 
     # Sanity checks
     if args.quiet and not args.write:
         sys.exit('Error:  quiet option specified without output file (-w)')
     elif args.write and not args.once:
-        print 'Notice:  {} specified as output file - assuming once option (use -ow {} to ' + \
-            'avoid this message)'.format(args.write, args.write)
+        print 'Notice:  {} specified as output file - assuming once option '.format(args.write) + \
+            '(use -ow {} to avoid this message)'.format(args.write, args.write)
         args.once = True
 
     myrouters = yaml_input(args.datafile)
     # Working data structure
     myrouter_cfg_times = {}
     if args.read:
-        if args.verbose:
-            print 'Reading in previous output data from {}...'.format(args.read)
-        with open(args.write, 'wb') as outfile:
-            pickle.dump(myrouter_cfg_times, outfile)
+        myrouter_cfg_times = read_data(args.read, args.format, args.informat, args.verbose)
     if args.once:
         if args.verbose:
             print 'Poll once and display results selected.'
         myrouter_cfg_times = poll_device(myrouters, myrouter_cfg_times, args.verbose, args.quiet)
-        with open(args.write, 'wb') as outfile:
-            pickle.dump(myrouter_cfg_times, outfile)
+        if args.write:
+            write_data(args.write, args.format, args.outformat, verbose=args.verbose):
+        elif args.verbose:
+            print 'No output file specified - not saving data set.'
     # args.continuous == True implied
     else:
         if args.verbose:
@@ -234,7 +276,10 @@ if __name__ == '__main__':
 ####################################################################################################
 #
 # To do:
-# * Need option to read in outputted pickle file
+# * Test new read/write formats
+# * Need option to allow inputting router data from CLI or prompting for it
+# * Need option to output YAML template for router data
+# * Need option to prompt for missing data from YAML input file
 #
 ####################################################################################################
 # Post coding
