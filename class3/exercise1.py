@@ -57,53 +57,63 @@ def yaml_input(file1):
             data1 = yaml.load(fh1)
         return data1
     else:
-        sys.exit('Invalid filename {}'.format(file1))
+        sys.exit('Error:  Invalid filename {}'.format(file1))
 
 def read_data(infile, file_format, infile_format, verbose=False):
     '''Read in router data from specified file.  Support Python pickle format, yaml format or
     json format and return data structure.'''
     if infile_format:
         read_format = infile_format
-    else
+    else:
         read_format = file_format
 
     if verbose:
         print 'Reading in previous output as {} formatted data from {}...'.format(read_format,
             infile)
-    with open(infile, 'rb') as file1:
-        if read_format == 'native':
-            router_cfg_times = pickle.load(file1)
-        elif read_format == 'yaml':
-            router_cfg_times = yaml.load(file1)
-        elif read_format == 'json':
-            router_cfg_times = json.load(file1)
-        else:
-            sys.exit('Unsupported file format {}.'.format(read_format)
+    if os.path.isfile(infile):
+        with open(infile, 'rb') as file1:
+            if read_format == 'native':
+                router_cfg_times = pickle.load(file1)
+            elif read_format == 'yaml':
+                router_cfg_times = yaml.load(file1)
+            elif read_format == 'json':
+                router_cfg_times = json.load(file1)
+            else:
+                sys.exit('Error:  Unsupported file format {}.'.format(read_format))
+    else:
+        sys.exit('Error:  Invalid filename {}'.format(infile))
     if verbose:
         print 'Working data set now:\n{}'.format(router_cfg_times)
 
     return router_cfg_times
 
-def write_data(outfile, file_format, outfile_format, yaml_format=True, verbose=False):
+def write_data(outfile, router_cfg_times, file_format, outfile_format, overwrite=False,
+               verbose=False, yaml_format=True):
     '''Write router data from specified file.  Support Python pickle format, yaml format or
     json format and return data structure.'''
     if outfile_format:
         write_format = outfile_format
-    else
+    else:
         write_format = file_format
 
     if verbose:
         print 'Writing output as {} formatted data to {}...'.format(write_format, outfile)
-    with open(outfile, 'wb') as file1:
-        if write_format == 'native':
-            pickle.dump(router_cfg_times, file1)
-        elif write_format == 'yaml':
-            file1.write(YAML_BOF)
-            file1.write(yaml.dump(router_cfg_times, default_flow_style=yaml_format)
-        elif write_format == 'json':
-            json.dump(router_cfg_times, file1)
-        else:
-            sys.exit('Unsupported file format {}.'.format(write_format)
+    # In this case, want to make sure file doesn't exist so don't clobber something:
+    if not os.path.isfile(outfile) or overwrite:
+        if verbose and os.path.isfile(outfile):
+            print 'Overwriting {}...'.format(outfile)
+        with open(outfile, 'wb') as file1:
+            if write_format == 'native':
+                pickle.dump(router_cfg_times, file1)
+            elif write_format == 'yaml':
+                file1.write(YAML_BOF)
+                file1.write(yaml.dump(router_cfg_times, default_flow_style=yaml_format))
+            elif write_format == 'json':
+                json.dump(router_cfg_times, file1)
+            else:
+                sys.exit('Error:  Unsupported file format {}.'.format(write_format))
+    else:
+        sys.exit('Error:  Existing filename {} - use --overwrite to force'.format(outfile))
 
 def timeticks_to_datetime(ticks):
     '''Convert SNMP timeticks (1/100 of second) to datetime value'''
@@ -121,7 +131,7 @@ def poll_device(routers, router_cfg_times, verbose=False, quiet=False):
     '''Poll router(s) for specified data.'''
     for router in routers:
         # Start time of poll sequence for router
-        now = datetime.datetime.today()
+        now = str(datetime.datetime.today())
         router_config_changed = False
         change_output = ''
         if not quiet:
@@ -215,6 +225,8 @@ def main(args):
     group2.add_argument('-o', '--once', action='store_true',
         help='poll once and display results', default=False)
     parser.add_argument('-w', '--write', help='specify file to write results to (implies -o)')
+    parser.add_argument('--overwrite', action='store_true',
+        help='overwrite existing file (with -w)', default=False)
     parser.add_argument('-f', '--format', help='specify input/output file format - native ' + \
         '(Python pickle - default if not specified) | yaml | json', default='native')
     parser.add_argument('--informat', help='specify input file format - native ' + \
@@ -241,7 +253,8 @@ def main(args):
             print 'Poll once and display results selected.'
         myrouter_cfg_times = poll_device(myrouters, myrouter_cfg_times, args.verbose, args.quiet)
         if args.write:
-            write_data(args.write, args.format, args.outformat, verbose=args.verbose):
+            write_data(args.write, myrouter_cfg_times, args.format, args.outformat, args.overwrite,
+                args.verbose)
         elif args.verbose:
             print 'No output file specified - not saving data set.'
     # args.continuous == True implied
