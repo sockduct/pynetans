@@ -289,7 +289,6 @@ if __name__ == '__main__':
 ####################################################################################################
 #
 # To do:
-# * Test new read/write formats
 # * Need option to allow inputting router data from CLI or prompting for it
 # * Need option to output YAML template for router data
 # * Need option to prompt for missing data from YAML input file
