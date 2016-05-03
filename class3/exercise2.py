@@ -195,6 +195,8 @@ if __name__ == '__main__':
 ####################################################################################################
 #
 # To do:
+# * Consider changing x-axis scale from seconds to minutes - perhaps do conditionally only if
+#   over a minute or a certain threshold?
 # * Need option to allow inputting router data from CLI or prompting for it
 # * Need option to output YAML template for router data
 # * Need option to prompt for missing data from YAML input file
