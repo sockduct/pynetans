@@ -58,7 +58,7 @@ class Router(object):
             sys.exit('Error:  Connection to {} timed-out'.format(self.ip_addr))
         except paramiko.ssh_exception.AuthenticationException:
             sys.exit('Error:  Authentication to {} failed - check username/password'.format(
-                    self.ip_addr))
+                self.ip_addr))
 
     def ssh_close(self):
         '''Close ssh connection.'''
@@ -112,7 +112,7 @@ def check_input(router1, ssh_port, verbose=False):
     elif ssh_port:
         if verbose:
             print 'overriding SSH_PORT value ({}) with passed -p value ({})'.format(
-                    router1['SSH_PORT'], ssh_port)
+                router1['SSH_PORT'], ssh_port)
         router1['SSH_PORT'] = ssh_port
 
 
@@ -125,13 +125,13 @@ def main(args):
         description='Retrieve show version output from specified router')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-d', '--datafile', help='specify YAML file to read router info from',
-        default=ROUTER_FILE)
+                        default=ROUTER_FILE)
     parser.add_argument('-p', '--port', help='specify ssh port (default is 22)')
     parser.add_argument('--prompt', action='store_true',
                         help='prompt for router info (do not try to read in from file)',
                         default=False)
     parser.add_argument('-v', '--verbose', action='store_true', help='display verbose output',
-        default=False)
+                        default=False)
     args = parser.parse_args()
 
     # Initialize data structures
