@@ -57,7 +57,7 @@ class Router(object):
 
     def ssh_close(self, close_cmd='exit'):
         '''Close ssh connection.'''
-        return self.send_cmd(close_cmd, r'onnection.*closed by remote host')
+        return self.send_cmd(close_cmd, r'onnection.*closed')
 
     def no_paging(self, paging_cmd='terminal length 0'):
         '''Disable the paging of output. (i.e., --More--)'''
@@ -141,7 +141,7 @@ def main(args):
 
     myrouter_conn = Router(myrouter['ADDRESS'], myrouter['USERNAME'], myrouter['PASSWORD'],
                            myrouter['SSH_PORT'], args.verbose)
-    output = myrouter_conn.ssh_conn()
+    myrouter_conn.ssh_conn()
     output = myrouter_conn.no_paging()
     if args.verbose:
         print output
