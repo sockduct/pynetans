@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 ####################################################################################################
+#
+# Template based on recommendations from Matt Harrison in Beginning Python Programming
+#
 '''<program description> - triple quotes should end on this line if on liner...
 '''
 
@@ -9,6 +12,8 @@
 import sys
 
 # Globals
+# Note:  Consider using function/class/method default parameters instead of global constants where
+# it makes sense
 #BASE_FILE = 'file1'
 
 # Metadata
@@ -40,7 +45,10 @@ def main(args):
 # Call main and put all logic there per best practices.
 # No triple quotes here because not a function!
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]) or 0)
+    # Recommended by Matt Harrison in Beginning Python Programming
+    # sys.exit(main(sys.argv[1:]) or 0)
+    # Simplied version recommended by Kirk Byers
+    main(sys.argv[1:])
 
 
 ####################################################################################################
@@ -53,3 +61,4 @@ if __name__ == '__main__':
 # * Testing - doctest/unittest/other
 # * Logging
 #
+
