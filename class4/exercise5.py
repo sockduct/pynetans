@@ -7,9 +7,7 @@ import argparse
 from getpass import getpass
 import netmiko
 import os
-import socket
 import sys
-import time
 import yaml
 
 # Globals
