@@ -4,6 +4,7 @@
 
 # Imports
 import argparse
+import datetime
 from getpass import getpass
 import netmiko
 import os
@@ -64,6 +65,10 @@ def check_input(router1, ssh_port, verbose=False):
 def main(args):
     '''Acquire necessary input options, execute show arp on multiple routers,
     process per CLI args.'''
+    # Benchmark
+    prog_start = datetime.datetime.now()
+    print 'Program start time:  {}'.format(prog_start)
+
     parser = argparse.ArgumentParser(
         description='Retrieve show version output from specified router')
     parser.add_argument('--version', action='version', version=__version__)
@@ -88,6 +93,12 @@ def main(args):
         output = router_conn.send_command(cmd)
         print '{} on [{}:{}]:\n{}\n'.format(cmd, router['ip'], router['port'], output)
         router_conn.disconnect()
+
+    # Benchmark
+    prog_end = datetime.datetime.now()
+    print 'Program end time:  {}'.format(prog_end)
+    prog_time = prog_end - prog_start
+    print 'Elapsed time:  {}'.format(prog_time)
 
 
 # Call main and put all logic there per best practices.
