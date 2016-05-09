@@ -62,7 +62,7 @@ def check_input(router1, ssh_port, verbose=False):
 
 ####################################################################################################
 def main(args):
-    '''Acquire necessary input options, call to retrieve version info from router,
+    '''Acquire necessary input options, call to logging buffer size on router,
     process per CLI args.'''
     parser = argparse.ArgumentParser(
         description='Retrieve show version output from specified router')

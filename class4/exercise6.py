@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 ####################################################################################################
-'''Use netmiko to enter into configuration mode and verify it worked on pynet-rtr2.'''
+'''Use netmiko to send command show arp to multiple routers.'''
 
 # Imports
 import argparse
@@ -62,7 +62,7 @@ def check_input(router1, ssh_port, verbose=False):
 
 ####################################################################################################
 def main(args):
-    '''Acquire necessary input options, call to retrieve version info from router,
+    '''Acquire necessary input options, execute show arp on multiple routers,
     process per CLI args.'''
     parser = argparse.ArgumentParser(
         description='Retrieve show version output from specified router')
