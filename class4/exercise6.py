@@ -67,7 +67,7 @@ def main(args):
     process per CLI args.'''
     # Benchmark
     prog_start = datetime.datetime.now()
-    print 'Program start time:  {}'.format(prog_start)
+    print 'Program start time:  {}\n'.format(prog_start)
 
     parser = argparse.ArgumentParser(
         description='Retrieve show version output from specified router')
