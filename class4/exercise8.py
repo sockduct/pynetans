@@ -89,9 +89,9 @@ def main(args):
         myrouters = [{}]
     # Check if myrouters is a list or a dictionary - expecting list of dictionaries, fix where
     # there is only a single dictionary present
-    if type(myrouters) is dict:
+    if isinstance(myrouters, dict):
         myrouters = [myrouters]
-    elif type(myrouters) is not list:
+    elif not isinstance(myrouters, list):
         sys.exit('Error:  Invalid data structure read from {}'.format(args.datafile))
     for router in myrouters:
         check_input(router, args.port, args.verbose)
@@ -105,7 +105,7 @@ def main(args):
         except netmiko.ssh_exception.NetMikoAuthenticationException:
             sys.exit('Error:  Authentication to {}:{} failed - check username/password'.format(
                 router['ip'], router['port']))
-    
+
         if args.verbose:
             output = router_conn.send_command('show run | inc logging')
             print 'Logging commands on {}:{} before change:\n{}\n'.format(router['ip'],
