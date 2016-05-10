@@ -65,7 +65,7 @@ def main(args):
     '''Acquire necessary input options, change to config mode on router and verify,
     process per CLI args.'''
     parser = argparse.ArgumentParser(
-        description='Retrieve show version output from specified router')
+        description='Enter into configuration mode on specified router and verify it worked')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-d', '--datafile', help='specify YAML file to read router info from',
                         default=ROUTER_FILE)

@@ -121,7 +121,7 @@ def check_input(router1, ssh_port, verbose=False):
 def main(args):
     '''Acquire necessary input options, interact with router, process per CLI args.'''
     parser = argparse.ArgumentParser(
-        description='Retrieve show version output from specified router')
+        description='Change logging buffer size on specified router')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-d', '--datafile', help='specify YAML file to read router info from',
                         default=ROUTER_FILE)

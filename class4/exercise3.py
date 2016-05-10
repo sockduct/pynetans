@@ -116,7 +116,7 @@ def main(args):
     '''Acquire necessary input options, call to retrieve info from router,
     process per CLI args.'''
     parser = argparse.ArgumentParser(
-        description='Retrieve show version output from specified router')
+        description='Retrieve show ip int brief output from specified router')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-d', '--datafile', help='specify YAML file to read router info from',
                         default=ROUTER_FILE)

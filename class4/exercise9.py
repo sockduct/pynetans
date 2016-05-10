@@ -95,7 +95,7 @@ def main(args):
     print 'Program start time:  {}\n'.format(prog_start)
 
     parser = argparse.ArgumentParser(
-        description='Retrieve show version output from specified router')
+        description='Execute show arp on specified routers concurrently')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-d', '--datafile', help='specify YAML file to read router info from',
                         default=ROUTER_FILE)
@@ -110,7 +110,12 @@ def main(args):
     args = parser.parse_args()
 
     # Initialize data structures
-    myrouters = yaml_input(args.datafile, args.verbose)
+    if not args.prompt:
+        myrouters = yaml_input(args.datafile, args.verbose)
+        if myrouters == {}:
+            myrouters = [{}]
+    else:
+        myrouters = [{}]
     for router in myrouters:
         check_input(router, args.port, args.verbose)
     cmd = 'show arp'

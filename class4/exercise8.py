@@ -67,7 +67,7 @@ def main(args):
     '''Acquire necessary input options, call to run config commands on routers,
     process per CLI args.'''
     parser = argparse.ArgumentParser(
-        description='Retrieve show version output from specified router')
+        description='Change logging buffer size and disable console logging on specified routers')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-c', '--configfile',
                         help='specify file to read router configuration commands from',
@@ -85,6 +85,8 @@ def main(args):
     # Initialize data structures
     if not args.prompt:
         myrouters = yaml_input(args.datafile, args.verbose)
+        if myrouters == {}:
+            myrouters = [{}]
     else:
         myrouters = [{}]
     # Check if myrouters is a list or a dictionary - expecting list of dictionaries, fix where

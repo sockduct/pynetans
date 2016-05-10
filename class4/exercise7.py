@@ -65,7 +65,7 @@ def main(args):
     '''Acquire necessary input options, call to logging buffer size on router,
     process per CLI args.'''
     parser = argparse.ArgumentParser(
-        description='Retrieve show version output from specified router')
+        description='Change logging buffer size on specified router')
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-d', '--datafile', help='specify YAML file to read router info from',
                         default=ROUTER_FILE)
@@ -78,7 +78,10 @@ def main(args):
     args = parser.parse_args()
 
     # Initialize data structures
-    myrouter = yaml_input(args.datafile, args.verbose)
+    if not args.prompt:
+        myrouter = yaml_input(args.datafile, args.verbose)
+    else:
+        myrouter = {}
     check_input(myrouter, args.port, args.verbose)
 
     try:
