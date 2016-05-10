@@ -1,0 +1,7 @@
+---
+- name: Generate access switch configuration file
+  hosts: local
+
+  roles:
+  - access_switch-ex3
+

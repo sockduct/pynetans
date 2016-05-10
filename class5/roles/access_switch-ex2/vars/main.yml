@@ -1,0 +1,8 @@
+---
+access_switches:
+  - {hostname: myswitch1, ip_addr: 10.1.1.201, default_gateway: 10.1.1.1, access_vlan: 101, secret: "Nxt%T0k73", snmp_community: Uvz921ok1fz, SNMPv3: True, auth_key: Z8l3n9oyTx42, encrypt_key: pZ23nY4H89x2}
+  - {hostname: myswitch2, ip_addr: 10.1.2.201, default_gateway: 10.1.2.1, access_vlan: 102, secret: "Nxt%T0k73", snmp_community: Uvz921ok1fz, SNMPv3: True, auth_key: Z8l3n9oyTx42, encrypt_key: pZ23nY4H89x2}
+  - {hostname: myswitch3, ip_addr: 10.1.3.201, default_gateway: 10.1.3.1, access_vlan: 103, secret: "Nxt%T0k73", snmp_community: Uvz921ok1fz, SNMPv3: False}
+  - {hostname: myswitch4, ip_addr: 10.1.4.201, default_gateway: 10.1.4.1, access_vlan: 104, secret: "Nxt%T0k73", snmp_community: Uvz921ok1fz, SNMPv3: False}
+  - {hostname: myswitch5, ip_addr: 10.1.5.201, default_gateway: 10.1.5.1, access_vlan: 105, secret: "Nxt%T0k73", snmp_community: Uvz921ok1fz, SNMPv3: False}
+
