@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 ####################################################################################################
-'''Use netmiko to send command show arp to multiple routers.'''
+'''Use netmiko to send command show arp to multiple routers.
+
+This program uses multiprocessing for accessing routers in parallel.'''
 
 # Imports
 import argparse
@@ -63,11 +65,25 @@ def check_input(router1, ssh_port, verbose=False):
 
 def rcmd(routerx, cmd, outq):
     '''Execute passed command on remote router and return result in passed queue'''
-    router_conn = netmiko.ConnectHandler(**routerx)
-    cmd_out = router_conn.send_command(cmd)
-    output = '{} on [{}:{}]:\n{}\n'.format(cmd, routerx['ip'], routerx['port'], cmd_out)
-    router_conn.disconnect()
-    outq.put(output)
+    try:
+        router_conn = netmiko.ConnectHandler(**routerx)
+        output = None
+        success = True
+    except netmiko.ssh_exception.NetMikoTimeoutException:
+        output = 'Error:  Connection to {}:{} timed out...\n'.format(routerx['ip'],
+                 routerx['port'])
+        success = False
+    except netmiko.ssh_exception.NetMikoAuthenticationException:
+        output = 'Error:  Authentication to {}:{} failed - check username/password\n'.format(
+                 routerx['ip'], routerx['port'])
+        success = False
+
+    if not output:
+        cmd_out = router_conn.send_command(cmd)
+        output = '{} on [{}:{}]:\n{}\n'.format(cmd, routerx['ip'], routerx['port'], cmd_out)
+        router_conn.disconnect()
+
+    outq.put((success, output))
 
 
 ####################################################################################################
@@ -76,7 +92,7 @@ def main(args):
     process per CLI args.'''
     # Benchmark
     prog_start = datetime.datetime.now()
-    print 'Program start time:  {}'.format(prog_start)
+    print 'Program start time:  {}\n'.format(prog_start)
 
     parser = argparse.ArgumentParser(
         description='Retrieve show version output from specified router')
@@ -89,6 +105,8 @@ def main(args):
                         default=False)
     parser.add_argument('-v', '--verbose', action='store_true', help='display verbose output',
                         default=False)
+    parser.add_argument('-w', '--wait', action='store_true',
+                        help="don't display results until all routers processed", default=False)
     args = parser.parse_args()
 
     # Initialize data structures
@@ -100,13 +118,31 @@ def main(args):
     processes = []
 
     for router in myrouters:
-        p = multiprocessing.Process(target=rcmd, args=(router, cmd, resultq))
-        processes.append(p)
-        p.start()
+        process = multiprocessing.Process(target=rcmd, args=(router, cmd, resultq))
+        processes.append(process)
+        process.start()
 
-    for process in processes:
-        result = resultq.get()
-        print result
+    # Believe preferable to print results as they are available versus waiting for everyone, so
+    # this is default behavior which can be overridden by -w
+    if args.wait:
+        for process in processes:
+            process.join()
+
+        worked = 'Succeeded:\n'
+        failed = 'Failed:\n'
+        for process in processes:
+            status, result = resultq.get()
+            if status:
+                worked += result + '\n'
+            else:
+                failed += result
+        print '{}\n{}'.format(worked, failed)
+    else:
+        for process in processes:
+            status, result = resultq.get()
+            if not status:
+                print 'Failed -',
+            print result
 
     # Benchmark
     prog_end = datetime.datetime.now()
