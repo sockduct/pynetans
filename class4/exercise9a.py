@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 ####################################################################################################
-'''Use netmiko to send command show arp to multiple routers.'''
+'''Use netmiko to send command show arp to multiple routers.
+
+This program is the same as exercise9.py except it uses the threading library instead of
+the multiprocessing library to access routers in parallel.  In addition, since threading
+doesn't have a queue built-in, it also uses the Queue library to handle concurrent I/O.'''
 
 # Imports
 import argparse
