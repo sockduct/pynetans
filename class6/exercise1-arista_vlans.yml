@@ -1,0 +1,25 @@
+---
+
+- name: Create Arista Switch VLANs
+  hosts: arista
+
+  tasks:
+    - name: Create first VLAN
+      eos_vlan: name=first vlanid=201
+            username={{ eapi_username }}
+            password={{ eapi_password }}
+            host={{ eapi_hostname }}
+            port={{ eapi_port }}
+            transport=https
+
+    - name: Create second and third VLANs
+      eos_vlan: name={{item.name}} vlanid={{item.vlanid}}
+            username={{ eapi_username }}
+            password={{ eapi_password }}
+            host={{ eapi_hostname }}
+            port={{ eapi_port }}
+            transport=https
+      with_items:
+        - {name: second, vlanid: 202}
+        - {name: third, vlanid: 203}
+

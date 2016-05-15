@@ -1,0 +1,16 @@
+---
+
+- name: Setup my primary ethernet interface
+  hosts: arista
+
+  tasks:
+    - name: Configure my primary ethernet interface - trunking setup
+      # Reset access vlan in case switching from access to trunk mode
+      eos_switchport: name=Ethernet4 mode=trunk access_vlan=1 trunk_native_vlan=1
+            trunk_allowed_vlans=201,202,203
+            username={{ eapi_username }}
+            password={{ eapi_password }}
+            host={{ eapi_hostname }}
+            port={{ eapi_port }}
+            transport=https
+

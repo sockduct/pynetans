@@ -1,0 +1,41 @@
+---
+
+- name: Restore my primary ethernet interface to defaults
+  hosts: arista
+
+  tasks:
+    - name: Configure my primary ethernet interface - description
+      eos_interface: name=Ethernet4 description=""
+            username={{ eapi_username }}
+            password={{ eapi_password }}
+            host={{ eapi_hostname }}
+            port={{ eapi_port }}
+            transport=https
+
+    - name: Configure my primary ethernet interface - access setup
+      eos_switchport: name=Ethernet4 mode=access access_vlan=1 trunk_allowed_vlans=1-4094
+            username={{ eapi_username }}
+            password={{ eapi_password }}
+            host={{ eapi_hostname }}
+            port={{ eapi_port }}
+            transport=https
+
+    - name: Delete first VLAN
+      eos_vlan: name=first vlanid=201 state=absent
+            username={{ eapi_username }}
+            password={{ eapi_password }}
+            host={{ eapi_hostname }}
+            port={{ eapi_port }}
+            transport=https
+
+    - name: Delete second and third VLANs
+      eos_vlan: name={{item.name}} vlanid={{item.vlanid}} state=absent
+            username={{ eapi_username }}
+            password={{ eapi_password }}
+            host={{ eapi_hostname }}
+            port={{ eapi_port }}
+            transport=https
+      with_items:
+        - {name: second, vlanid: 202}
+        - {name: third, vlanid: 203}
+

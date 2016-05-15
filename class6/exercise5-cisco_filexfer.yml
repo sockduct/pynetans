@@ -1,0 +1,27 @@
+---
+
+- name: Transfer small configuration file to Cisco IOS router pynet-rtr1
+#  hosts: cisco
+  hosts: pynet-rtr1
+  gather_facts: False
+
+  tasks:
+    - name: Transfer logging configuration change file
+      cisco_file_transfer:
+            source_file="/home/jsmall/ANSIBLE/cisco_logsetup.cfg"
+            dest_file=cisco_logsetup.cfg
+            username={{ username }}
+            password={{ password }}
+            host={{ host }}
+            port={{ port }}
+            enable_scp=true
+            overwrite=true
+
+    - name: Merge configuration change file
+      cisco_config_merge:
+            merge_file=cisco_logsetup.cfg
+            username={{ username }}
+            password={{ password }}
+            host={{ host }}
+            port={{ port }}
+
