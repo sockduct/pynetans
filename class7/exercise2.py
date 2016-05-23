@@ -62,10 +62,12 @@ def vlan_add(switch1, vlan1, name1, verbose):
        - Supported VLAN ID range is from 100-999'''
     output = vlan_get(switch1)
 
+    if verbose:
+        print 'Attempting to add VLAN {}...'.format(vlan1)
     if vlan1 not in output:
         if verbose:
-            print 'VLAN not found on switch...'
-        if vlan1 >= VLAN_MIN and vlan1 <= VLAN_MAX:
+            print 'Checking for VLAN...not found on switch'
+        if int(vlan1) >= VLAN_MIN and int(vlan1) <= VLAN_MAX:
             if verbose:
                 print 'VLAN in valid range of {} - {}...'.format(VLAN_MIN, VLAN_MAX)
             cmds = ['vlan {}'.format(vlan1)]
@@ -75,11 +77,12 @@ def vlan_add(switch1, vlan1, name1, verbose):
             output = switch1.config(cmds)
             if name1:
                 if output != [{}, {}]:
-                    print 'Error occurred while adding VLAN {}, name {}...'.format(vlan1, name1)
-                elif output != [{}]:
-                    print 'Error occurred while adding VLAN {}...'.format(vlan1)
-                elif verbose:
-                    print 'VLAN successfully added'
+                    print 'Error occurred while adding VLAN {}, name {}:\n{}'.format(vlan1, name1,
+                          output)
+            elif output != [{}]:
+                print 'Error occurred while adding VLAN {}:\n{}'.format(vlan1, output)
+            elif verbose:
+                print 'VLAN successfully added'
         else:
             print 'Error - VLAN must be in range of {} - {} - not adding...'.format(VLAN_MIN, VLAN_MAX)
     else:
@@ -90,6 +93,29 @@ def vlan_add(switch1, vlan1, name1, verbose):
 def vlan_remove(switch1, vlan1, name1, verbose):
     '''Remove a VLAN from switch:
        - Only remove VLAN if it exists on switch'''
+    output = vlan_get(switch1)
+
+    if verbose:
+        print 'Attempting to remove VLAN {}...'.format(vlan1)
+    if vlan1 in output:
+        if verbose:
+            print 'Checking for VLAN...found on switch'
+        if int(vlan1) >= VLAN_MIN and int(vlan1) <= VLAN_MAX:
+            if verbose:
+                print 'VLAN in valid range of {} - {}...'.format(VLAN_MIN, VLAN_MAX)
+            cmds = ['no vlan {}'.format(vlan1)]
+            ### Need to check for errors
+            output = switch1.config(cmds)
+            if output != [{}]:
+                print 'Error occurred while removing VLAN {}:\n{}'.format(vlan1, output)
+            elif verbose:
+                print 'VLAN successfully removed'
+        else:
+            print 'Error - VLAN must be in range of {} - {} - not removing...'.format(VLAN_MIN, VLAN_MAX)
+    else:
+        print "VLAN doesn't exist on switch - not removing..."
+    if verbose:
+        vlan_list(switch1, verbose)
 
 def vlan_list(switch1, verbose, vlan1=None, name1=None):
     '''Show VLANs defined on switch
@@ -110,7 +136,7 @@ def vlan_list(switch1, verbose, vlan1=None, name1=None):
             print '{:>4} {:32} {:9} {}'.format(vlan, vlan_name, vlan_status, vlan_ints_lst)
     elif vlan1:
         if vlan1 in output:
-            vlan_ints_lst = vlan_ints(output[vlan])
+            vlan_ints_lst = vlan_ints(output[vlan1])
             print '{:>4} {:32} {:9} {}'.format(vlan1, output[vlan1]['name'],
                   output[vlan1]['status'], vlan_ints_lst)
         else:
@@ -139,7 +165,7 @@ def main(args):
     groupx = parser.add_mutually_exclusive_group()
     # Fix later...
     #groupx.add_argument('vlanid', type=int, help='Add {}'.format(help_str))
-    groupx.add_argument('-a', '--add', type=int, help='Add {}'.format(help_str))
+    groupx.add_argument('-a', '--add', help='Add {}'.format(help_str))
     groupx.add_argument('-r', '--remove', type=int, help='Remove {}'.format(help_str))
     groupx.add_argument('-l', '--list', action='store_true',
                         help='List current VLANs and their names')
@@ -154,10 +180,8 @@ def main(args):
     if args.list:
         vlan_list(pynet_sw, args.verbose)
     elif args.add:
-        print 'Adding VLAN...'
         vlan_add(pynet_sw, args.add, args.name, args.verbose)
     elif args.remove:
-        print 'Removing VLAN...'
         vlan_remove(pynet_sw, args.remove, args.name, args.verbose)
     else:
         print "Doooh!  Shouldn't see this...  :-O"
