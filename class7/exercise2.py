@@ -31,6 +31,102 @@ __date__ = 'May 21, 2016'
 __version__ = '0.0.1'
 
 
+def vlan_get(switch1):
+    '''Obtain VLAN database from switch'''
+    output = switch1.enable('show vlan')
+
+    # Extract desired info
+    output = output[0]
+    output = output['result']
+    output = output['vlans']
+
+    return output
+
+def vlan_ints(vlan_intdb):
+    '''Obtain list of interfaces set to VLAN'''
+    vlan_ints = []
+
+    for interface in vlan_intdb['interfaces']:
+        vlan_ints.append(interface)
+    if vlan_ints == []:
+        vlan_ints_lst = '--None--'
+    else:
+        vlan_ints_lst = ', '.join(sorted(vlan_ints)).replace('hernet', '')
+
+    return vlan_ints_lst
+
+def vlan_add(switch1, vlan1, name1, verbose):
+    '''Add a VLAN to switch:
+       - Support creating both VLAN ID and Name
+       - Only add VLAN if it isn't yet defined on switch
+       - Supported VLAN ID range is from 100-999'''
+    output = vlan_get(switch1)
+
+    if vlan1 not in output:
+        if verbose:
+            print 'VLAN not found on switch...'
+        if vlan1 >= VLAN_MIN and vlan1 <= VLAN_MAX:
+            if verbose:
+                print 'VLAN in valid range of {} - {}...'.format(VLAN_MIN, VLAN_MAX)
+            cmds = ['vlan {}'.format(vlan1)]
+            if name1:
+                cmds.append('name {}'.format(name1))
+            ### Need to check for errors
+            output = switch1.config(cmds)
+            if name1:
+                if output != [{}, {}]:
+                    print 'Error occurred while adding VLAN {}, name {}...'.format(vlan1, name1)
+                elif output != [{}]:
+                    print 'Error occurred while adding VLAN {}...'.format(vlan1)
+                elif verbose:
+                    print 'VLAN successfully added'
+        else:
+            print 'Error - VLAN must be in range of {} - {} - not adding...'.format(VLAN_MIN, VLAN_MAX)
+    else:
+        print 'VLAN already exists on switch - not adding...'
+    if verbose:
+        vlan_list(switch1, verbose, vlan1)
+
+def vlan_remove(switch1, vlan1, name1, verbose):
+    '''Remove a VLAN from switch:
+       - Only remove VLAN if it exists on switch'''
+
+def vlan_list(switch1, verbose, vlan1=None, name1=None):
+    '''Show VLANs defined on switch
+       - Default is to list all VLANs (no vlan or name passed)
+       - If a VLAN is passed, just list that VLAN number
+       - If a Name is passed, just list that VLAN name'''
+    output = vlan_get(switch1)
+
+    print 'VLAN Name                             Status    Interfaces'
+    print '---- -------------------------------- --------- --------------------------------'
+    if not vlan1 and not name1:
+        vlans = output.keys()
+        vlans.sort(key=int)
+        for vlan in vlans:
+            vlan_name = output[vlan]['name']
+            vlan_status = output[vlan]['status']
+            vlan_ints_lst = vlan_ints(output[vlan])
+            print '{:>4} {:32} {:9} {}'.format(vlan, vlan_name, vlan_status, vlan_ints_lst)
+    elif vlan1:
+        if vlan1 in output:
+            vlan_ints_lst = vlan_ints(output[vlan])
+            print '{:>4} {:32} {:9} {}'.format(vlan1, output[vlan1]['name'],
+                  output[vlan1]['status'], vlan_ints_lst)
+        else:
+            print 'Error - VLAN {} not defined on switch'.format(vlan1)
+    elif name1:
+        found_vlan_name = False
+        # Need to iterate through all VLANs because VLAN name is not guaranteed to be unique
+        for vlan in output:
+            if name1 == output[vlan]['name']:
+                found_vlan_name = True
+                vlan_ints_lst = vlan_ints(output[vlan])
+                print '{:>4} {:32} {:9} {}'.format(vlan1, output[vlan1]['name'],
+                      output[vlan1]['status'], vlan_ints_lst)
+        if not found_vlan_name:
+            print 'Error - VLAN Name {} not defined on switch'.format(name1)
+
 def main(args):
     '''Acquire necessary input options, connect to Arista switch, add/remove/list VLANs
     per CLI args.'''
@@ -53,27 +149,18 @@ def main(args):
     # Connect to Arista switch
     pynet_sw = pyeapi.connect_to(MY_SWITCH)
 
+    print 'args:  {}'.format(args)
+
     if args.list:
-        output = pynet_sw.enable('show vlan')
-        # Extract desired info
-        output = output[0]
-        output = output['result']
-        output = output['vlans']
-        print 'VLAN Name                             Status    Interfaces'
-        print '---- -------------------------------- --------- --------------------------------'
-        for vlan in output:
-            vlan_name = output[vlan]['name']
-            vlan_status = output[vlan]['status']
-            vlan_ints = []
-            for interface in output[vlan]['interfaces']:
-                vlan_ints.append(interface)
-            if vlan_ints == []:
-                vlan_ints_lst = '--None--'
-            else:
-                vlan_ints_lst = ', '.join(sorted(vlan_ints)).replace('hernet', '')
-            print '{:>4} {:32} {:9} {}'.format(vlan, vlan_name, vlan_status, vlan_ints_lst)
+        vlan_list(pynet_sw, args.verbose)
+    elif args.add:
+        print 'Adding VLAN...'
+        vlan_add(pynet_sw, args.add, args.name, args.verbose)
+    elif args.remove:
+        print 'Removing VLAN...'
+        vlan_remove(pynet_sw, args.remove, args.name, args.verbose)
     else:
-        print 'Not implemented!'
+        print "Doooh!  Shouldn't see this...  :-O"
 
 # Call main and put all logic there per best practices.
 # No triple quotes here because not a function!
