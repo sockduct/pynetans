@@ -166,7 +166,7 @@ def main(args):
     # Fix later...
     #groupx.add_argument('vlanid', type=int, help='Add {}'.format(help_str))
     groupx.add_argument('-a', '--add', help='Add {}'.format(help_str))
-    groupx.add_argument('-r', '--remove', type=int, help='Remove {}'.format(help_str))
+    groupx.add_argument('-r', '--remove', help='Remove {}'.format(help_str))
     groupx.add_argument('-l', '--list', action='store_true',
                         help='List current VLANs and their names')
     parser.add_argument('-n', '--name', help='Name of VLAN to add/remove')
