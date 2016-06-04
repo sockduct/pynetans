@@ -102,7 +102,7 @@ def vlan_add(switch1, vlan1, name1, verbose):
             print 'VLAN successfully added'
             if verbose:
                 vlan_list(switch1, verbose, vlan1)
-            return 1
+        return 1
     else:
         print 'VLAN already exists on switch - aborting...'
         return -1
@@ -148,7 +148,7 @@ def vlan_remove(switch1, vlan1, name1, verbose):
             print 'VLAN successfully removed'
             if verbose:
                 vlan_list(switch1, verbose)
-            return 1
+        return 1
     else:
         print "VLAN doesn't exist on switch - aborting..."
         return -1
