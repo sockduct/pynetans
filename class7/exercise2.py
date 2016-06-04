@@ -53,16 +53,16 @@ def vlan_get(switch1):
 
 def vlan_ints(vlan_intdb):
     '''Obtain list of interfaces set to VLAN'''
-    vlan_ints = []
+    my_vlan_ints = []
 
     for interface in vlan_intdb['interfaces']:
-        vlan_ints.append(interface)
-    if vlan_ints == []:
-        vlan_ints_lst = '--None--'
+        my_vlan_ints.append(interface)
+    if my_vlan_ints == []:
+        my_vlan_ints_lst = '--None--'
     else:
-        vlan_ints_lst = ', '.join(sorted(vlan_ints)).replace('hernet', '')
+        my_vlan_ints_lst = ', '.join(sorted(my_vlan_ints)).replace('hernet', '')
 
-    return vlan_ints_lst
+    return my_vlan_ints_lst
 
 def vlan_add(switch1, vlan1, name1, verbose):
     '''Add a VLAN to switch:
@@ -117,7 +117,8 @@ def vlan_remove(switch1, vlan1, name1, verbose):
         if verbose:
             print 'VLAN in valid range of {} - {}...'.format(VLAN_MIN, VLAN_MAX)
     else:
-        print 'Error:  VLAN must be in range of {} - {} - not removing...'.format(VLAN_MIN, VLAN_MAX)
+        print 'Error:  VLAN must be in range of {} - {} - not removing...'.format(VLAN_MIN,
+              VLAN_MAX)
         return -1
 
     if verbose:
