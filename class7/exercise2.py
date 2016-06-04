@@ -28,8 +28,17 @@ VLAN_MAX = 999
 __author__ = 'James R. Small'
 __contact__ = 'james<dot>r<dot>small<at>outlook<dot>com'
 __date__ = 'May 21, 2016'
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
+
+def is_int(string1):
+    '''Check if passed string is a number.
+       This is necessary because isdigit() can't deal with negative numbers.'''
+    try:
+        int(string1)
+        return True
+    except ValueError:
+        return False
 
 def vlan_get(switch1):
     '''Obtain VLAN database from switch'''
@@ -57,65 +66,91 @@ def vlan_ints(vlan_intdb):
 
 def vlan_add(switch1, vlan1, name1, verbose):
     '''Add a VLAN to switch:
-       - Support creating both VLAN ID and Name
+       - Support both creating VLAN ID and its Name
        - Only add VLAN if it isn't yet defined on switch
-       - Supported VLAN ID range is from 100-999'''
+       - Supported VLAN ID range is from VLAN_MIN-VLAN_MAX'''
     output = vlan_get(switch1)
+
+    # First do sanity check - is VLAN in allowed range?
+    if int(vlan1) >= VLAN_MIN and int(vlan1) <= VLAN_MAX:
+        if verbose:
+            print 'VLAN in valid range of {} - {}...'.format(VLAN_MIN, VLAN_MAX)
+    else:
+        print 'Error:  VLAN must be in range of {} - {} - aborting...'.format(VLAN_MIN, VLAN_MAX)
+        return -1
 
     if verbose:
         print 'Attempting to add VLAN {}...'.format(vlan1)
     if vlan1 not in output:
         if verbose:
             print 'Checking for VLAN...not found on switch'
-        if int(vlan1) >= VLAN_MIN and int(vlan1) <= VLAN_MAX:
+        cmds = ['vlan {}'.format(vlan1)]
+        if name1:
+            cmds.append('name {}'.format(name1))
+        ### Need to check for errors
+        output = switch1.config(cmds)
+        if name1:
+            if output != [{}, {}]:
+                print 'Error occurred while adding VLAN {}, name {}:\n{}'.format(vlan1, name1,
+                      output)
+                return -1
+        elif output != [{}]:
+            print 'Error occurred while adding VLAN {}:\n{}'.format(vlan1, output)
+            return -1
+
+        if verbose:
+            print 'VLAN successfully added'
             if verbose:
-                print 'VLAN in valid range of {} - {}...'.format(VLAN_MIN, VLAN_MAX)
-            cmds = ['vlan {}'.format(vlan1)]
-            if name1:
-                cmds.append('name {}'.format(name1))
-            ### Need to check for errors
-            output = switch1.config(cmds)
-            if name1:
-                if output != [{}, {}]:
-                    print 'Error occurred while adding VLAN {}, name {}:\n{}'.format(vlan1, name1,
-                          output)
-            elif output != [{}]:
-                print 'Error occurred while adding VLAN {}:\n{}'.format(vlan1, output)
-            elif verbose:
-                print 'VLAN successfully added'
-        else:
-            print 'Error - VLAN must be in range of {} - {} - not adding...'.format(VLAN_MIN, VLAN_MAX)
+                vlan_list(switch1, verbose, vlan1)
+            return 1
     else:
-        print 'VLAN already exists on switch - not adding...'
-    if verbose:
-        vlan_list(switch1, verbose, vlan1)
+        print 'VLAN already exists on switch - aborting...'
+        return -1
 
 def vlan_remove(switch1, vlan1, name1, verbose):
     '''Remove a VLAN from switch:
        - Only remove VLAN if it exists on switch'''
     output = vlan_get(switch1)
 
+    # First do sanity check - is VLAN in allowed range?
+    if int(vlan1) >= VLAN_MIN and int(vlan1) <= VLAN_MAX:
+        if verbose:
+            print 'VLAN in valid range of {} - {}...'.format(VLAN_MIN, VLAN_MAX)
+    else:
+        print 'Error:  VLAN must be in range of {} - {} - not removing...'.format(VLAN_MIN, VLAN_MAX)
+        return -1
+
     if verbose:
         print 'Attempting to remove VLAN {}...'.format(vlan1)
     if vlan1 in output:
         if verbose:
             print 'Checking for VLAN...found on switch'
-        if int(vlan1) >= VLAN_MIN and int(vlan1) <= VLAN_MAX:
+        #
+        # If VLAN Name supplied, check that it matches switch configuration
+        if name1:
+            switch_vlan_name = output[vlan1]['name']
+            if name1 == switch_vlan_name:
+                if verbose:
+                    print 'Checking passed VLAN Name matches switch configuration...Confirmed'
+            else:
+                print 'Error:  Passed VLAN Name does not match switch VLAN configuration name' + \
+                      ' ({}) - Aborting...'.format(switch_vlan_name)
+                return -1
+        ####
+        cmds = ['no vlan {}'.format(vlan1)]
+        ### Need to check for errors
+        output = switch1.config(cmds)
+        if output != [{}]:
+            print 'Error occurred while removing VLAN {}:\n{}'.format(vlan1, output)
+            return -1
+        elif verbose:
+            print 'VLAN successfully removed'
             if verbose:
-                print 'VLAN in valid range of {} - {}...'.format(VLAN_MIN, VLAN_MAX)
-            cmds = ['no vlan {}'.format(vlan1)]
-            ### Need to check for errors
-            output = switch1.config(cmds)
-            if output != [{}]:
-                print 'Error occurred while removing VLAN {}:\n{}'.format(vlan1, output)
-            elif verbose:
-                print 'VLAN successfully removed'
-        else:
-            print 'Error - VLAN must be in range of {} - {} - not removing...'.format(VLAN_MIN, VLAN_MAX)
+                vlan_list(switch1, verbose)
+            return 1
     else:
-        print "VLAN doesn't exist on switch - not removing..."
-    if verbose:
-        vlan_list(switch1, verbose)
+        print "VLAN doesn't exist on switch - aborting..."
+        return -1
 
 def vlan_list(switch1, verbose, vlan1=None, name1=None):
     '''Show VLANs defined on switch
@@ -140,7 +175,7 @@ def vlan_list(switch1, verbose, vlan1=None, name1=None):
             print '{:>4} {:32} {:9} {}'.format(vlan1, output[vlan1]['name'],
                   output[vlan1]['status'], vlan_ints_lst)
         else:
-            print 'Error - VLAN {} not defined on switch'.format(vlan1)
+            print 'Error:  VLAN {} not defined on switch'.format(vlan1)
     elif name1:
         found_vlan_name = False
         # Need to iterate through all VLANs because VLAN name is not guaranteed to be unique
@@ -151,7 +186,7 @@ def vlan_list(switch1, verbose, vlan1=None, name1=None):
                 print '{:>4} {:32} {:9} {}'.format(vlan1, output[vlan1]['name'],
                       output[vlan1]['status'], vlan_ints_lst)
         if not found_vlan_name:
-            print 'Error - VLAN Name {} not defined on switch'.format(name1)
+            print 'Error:  VLAN Name {} not defined on switch'.format(name1)
 
 def main(args):
     '''Acquire necessary input options, connect to Arista switch, add/remove/list VLANs
@@ -162,9 +197,9 @@ def main(args):
     parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('-v', '--verbose', action='store_true', help='display verbose output',
                         default=False)
+    parser.add_argument('vlanid', nargs='?', help='Add (-a implied) {}'.format(help_str),
+                        default='-')
     groupx = parser.add_mutually_exclusive_group()
-    # Fix later...
-    #groupx.add_argument('vlanid', type=int, help='Add {}'.format(help_str))
     groupx.add_argument('-a', '--add', help='Add {}'.format(help_str))
     groupx.add_argument('-r', '--remove', help='Remove {}'.format(help_str))
     groupx.add_argument('-l', '--list', action='store_true',
@@ -172,19 +207,30 @@ def main(args):
     parser.add_argument('-n', '--name', help='Name of VLAN to add/remove')
     args = parser.parse_args()
 
+    # Debugging:
+    ##print 'args:  {}'.format(args)
+
+    if is_int(args.vlanid) and args.add:
+        print 'Error:  Use either {} <VLAN_ID> -or- {} -a <VLAN_ID>'.format(sys.argv[0],
+              sys.argv[0])
+        sys.exit(1)
+
     # Connect to Arista switch
     pynet_sw = pyeapi.connect_to(MY_SWITCH)
 
-    print 'args:  {}'.format(args)
-
     if args.list:
         vlan_list(pynet_sw, args.verbose)
+    elif is_int(args.vlanid):
+        vlan_add(pynet_sw, args.vlanid, args.name, args.verbose)
     elif args.add:
         vlan_add(pynet_sw, args.add, args.name, args.verbose)
     elif args.remove:
         vlan_remove(pynet_sw, args.remove, args.name, args.verbose)
     else:
-        print "Doooh!  Shouldn't see this...  :-O"
+        print 'Usage:  {} {{[-a] <VLAN_ID> | -r <VLAN_ID> '.format(sys.argv[0]) + \
+                 '[-n <VLAN_Name>]} | [-l] | [--version]'
+        print '            [-v] (Must be paired with a | r | l)'
+        sys.exit(1)
 
 # Call main and put all logic there per best practices.
 # No triple quotes here because not a function!
