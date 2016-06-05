@@ -14,7 +14,7 @@ DOCUMENTATION = '''
 ---
 module: exercise3
 author: "James Small"
-version_added: "?.?.?"
+version_added: "0.0.1"
 short_description: Add VLAN to Arista switch
 requirements: [ pyeapi ]
 description:
@@ -41,9 +41,138 @@ EXAMPLES = '''
 - exercise3: vlan=101 name=MyVLAN state=present
 '''
 
+# Globals
+MY_SWITCH = 'pynet-sw4'
+VLAN_MIN = 1
+VLAN_MAX = 4094
+
 # Imports
 import pyeapi
 from ansible.module_utils.basic import *
+
+def is_int(string1):
+    '''Check if passed string is a number.
+       This is necessary because isdigit() can't deal with negative numbers.'''
+    try:
+        int(string1)
+        return True
+    except ValueError:
+        return False
+    
+class Switch(object):
+    '''Represent an Arista vswitch to allow adding/removing VLANs'''
+
+    def __init__(self, module):
+        '''Initialize class instance.'''
+        self.module = module
+        self.state = module.params['state']
+        self.vlan = module.params['vlan']
+        self.name = module.params['name']
+        self.conn = None
+
+    # Enforce valid VLAN values (obtained from StackOverFlow)
+    @property
+    def vlan(self):
+        return self._vlan
+    #
+    @vlan.setter
+    def vlan(self, v):
+        if not int(v) >= VLAN_MIN and int(v) <= VLAN_MAX:
+            raise Exception('VLAN must be an integer in the range {} - {}'.format(VLAN_MIN,
+                            VLAN_MAX))
+        self._value = v
+
+    def openconn(self, switch1):
+        '''Establish connection to switch.'''
+        self.conn = pyeapi.connect_to(switch1)
+
+    def vlan_get(self):
+        '''Obtain VLAN database from switch'''
+        output = self.conn.enable('show vlan')
+    
+        # Extract desired info
+        output = output[0]
+        output = output['result']
+        output = output['vlans']
+    
+        return output
+    
+    def vlan_exists(self):
+        '''Check if a VLAN exists on switch.'''
+        output = vlan_get(self.conn)
+    
+        if self.vlan in output:
+            return True
+        else:
+            return False
+    
+    def named_vlan_exists(self, check1):
+        '''Check if a VLAN exists on switch.'''
+        output = vlan_get(self.conn)
+    
+        if self.vlan_exists():
+            switch_vlan_name = output[self.vlan]['name']
+            # VLAN exists, correct name
+            if self.name == switch_vlan_name:
+                return True
+            # VLAN exists, incorrect name
+            else:
+                return False
+        # VLAN does not exist
+        else:
+            return False
+    
+    def vlan_add(self, check1):
+        '''Add a VLAN to switch:
+           - Support both creating VLAN ID and its Name
+           - Only add VLAN if it isn't yet defined on switch
+           - Supported VLAN ID range is from VLAN_MIN-VLAN_MAX'''
+    
+        if not self.vlan_exists():
+            cmds = ['vlan {}'.format(self.vlan)]
+            if self.name:
+                cmds.append('name {}'.format(self.name))
+            ### Need to check for errors
+            output = self.conn.config(cmds)
+            if self.name:
+                if output != [{}, {}]:
+                    status = 'Error occurred while adding VLAN {}, name {}:\n{}'.format(self.vlan,
+                             self.name, output)
+                    return (status, -1)
+            elif output != [{}]:
+                status = 'Error occurred while adding VLAN {}:\n{}'.format(self.vlan, output)
+                return (status, -1)
+    
+            return ('Successful', 0)
+        else:
+            status = 'VLAN already exists on switch - aborting...'
+            return (status, -1)
+    
+    def vlan_remove(self, check1):
+        '''Remove a VLAN from switch:
+           - Only remove VLAN if it exists on switch'''
+        output = vlan_get(switch1)
+    
+        if self.vlan in output:
+            #
+            # If VLAN Name supplied, check that it matches switch configuration
+            if self.name:
+                switch_vlan_name = output[self.vlan]['name']
+                if not self.name == switch_vlan_name:
+                    status = 'Error:  Passed VLAN Name does not match switch VLAN configuration name' + \
+                             ' ({}) - Aborting...'.format(switch_vlan_name)
+                    return (status, -1)
+            ####
+            cmds = ['no vlan {}'.format(self.vlan)]
+            ### Need to check for errors
+            output = self.conn.config(cmds)
+            if output != [{}]:
+                status = 'Error occurred while removing VLAN {}:\n{}'.format(self.vlan, output)
+                return (status, -1)
+            return ('Successful', 0)
+        else:
+            status = "VLAN doesn't exist on switch - aborting..."
+            return (status, -1)
 
 def main():
     module = AnsibleModule(
@@ -56,14 +185,8 @@ def main():
     )
     
     
-    # Connect to Arista switch
-    pynet_sw = pyeapi.connect_to(MY_SWITCH)
 
-    group = Group(module)
-
-    module.debug('Group instantiated - platform %s' % group.platform)
-    if group.distribution:
-        module.debug('Group instantiated - distribution %s' % group.distribution)
+    switch = Switch(module)
 
     rc = None
     out = ''
@@ -72,18 +195,18 @@ def main():
     result['name'] = group.name
     result['state'] = group.state
 
-    if group.state == 'absent':
+    if switch.state == 'absent':
 
-        if group.group_exists():
+        if switch.vlan_exists():
             if module.check_mode:
                 module.exit_json(changed=True)
             (rc, out, err) = group.group_del()
             if rc != 0:
                 module.fail_json(name=group.name, msg=err)
 
-    elif group.state == 'present':
+    elif switch.state == 'present':
 
-        if not group.group_exists():
+        if not switch.vlan_exists():
             if module.check_mode:
                 module.exit_json(changed=True)
             (rc, out, err) = group.group_add(gid=group.gid, system=group.system)
@@ -102,7 +225,7 @@ def main():
     if err:
         result['stderr'] = err
 
-    if group.group_exists():
+    if switch.vlan_exists():
         info = group.group_info()
         result['system'] = group.system
         result['gid'] = info[2]
