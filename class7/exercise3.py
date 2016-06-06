@@ -106,35 +106,25 @@ class Switch(object):
         else:
             return False
     
+    def vlan_name(self):
+        '''Return information on VLAN ID and name of VLAN ID on switch (id defined).'''
+        if self.vlan_exists():
+            output = vlan_get(self.conn)
+            return output[self.vlan]['name']
+        else:
+            return None
+
     def vlan_name_ok(self):
         '''Check if VLAN's name on switch matches passed name.'''
-        output = vlan_get(self.conn)
-
-        switch_vlan_name = output[self.vlan]['name']
+        switch_vlan_name = self.vlan_name()
         # VLAN name matches
-        if self.name == switch_vlan_name:
+        if self.name == switch_vlan_name and switch_vlan_name not None:
             return True
-        # VLAN name doesn't match
+        # VLAN name doesn't match or VLAN doesn't exist
         else:
             return False
 
-    def named_vlan_exists(self, check1):
-        '''Check if a VLAN exists on switch.'''
-        output = vlan_get(self.conn)
-    
-        if self.vlan_exists():
-            switch_vlan_name = output[self.vlan]['name']
-            # VLAN exists, correct name
-            if self.name == switch_vlan_name:
-                return True
-            # VLAN exists, incorrect name
-            else:
-                return False
-        # VLAN does not exist
-        else:
-            return False
-    
-    def vlan_add(self, check1):
+    def vlan_add(self):
         '''Add a VLAN to switch:
            - Support both creating VLAN ID and its Name
            - Only add VLAN if it isn't yet defined on switch
@@ -162,20 +152,16 @@ class Switch(object):
             status = 'VLAN already exists on switch - aborting...'
             return (status, 0)
     
-    def vlan_remove(self, check1):
+    def vlan_remove(self):
         '''Remove a VLAN from switch:
            - Only remove VLAN if it exists on switch'''
-        output = vlan_get(switch1)
-    
-        if self.vlan in output:
+        if self.vlan_exists():
             #
             # If VLAN Name supplied, check that it matches switch configuration
-            if self.name:
-                switch_vlan_name = output[self.vlan]['name']
-                if not self.name == switch_vlan_name:
-                    status = 'Error:  Passed VLAN Name does not match switch VLAN configuration name' + \
-                             ' ({}) - Aborting...'.format(switch_vlan_name)
-                    return (status, -1)
+            if self.name and not self.vlan_name_ok():
+                status = 'Error:  Passed VLAN Name does not match switch VLAN configuration name' + \
+                         ' ({}) - Aborting...'.format(switch_vlan_name)
+                return (status, -1)
             ####
             cmds = ['no vlan {}'.format(self.vlan)]
             ### Need to check for errors
@@ -202,49 +188,54 @@ def main():
 
     switch = Switch(module)
 
-    rc = None
-    out = ''
-    err = ''
+    stat_msg = ''
+    stat_code = None
     result = {}
     result['name'] = switch.name
     result['state'] = switch.state
 
-    # Want VLAN Removed
+    # VLAN should be removed or not exist
     if switch.state == 'absent':
 
         if switch.vlan_exists():
             if module.check_mode:
                 module.exit_json(changed=True)
-            (rc, out, err) = switch.vlan_remove()
-            if rc != 0:
-                module.fail_json(name=group.name, msg=err)
+            (stat_msg, stat_code) = switch.vlan_remove()
+            if stat_code != 0:
+                module.fail_json(name=switch.vlan, msg=stat_msg)
 
-    # Want VLAN Added
+    # VLAN should be added or exist
     elif switch.state == 'present':
 
-        if not switch.vlan_exists():
+        # If VLAN not defined, or defined but configured name doesn't match passed name:
+        if not switch.vlan_exists() or (switch.vlan_exists and not switch.vlan_name_ok()):
             if module.check_mode:
                 module.exit_json(changed=True)
-            (rc, out, err) = group.group_add(gid=group.gid, system=group.system)
+            # Do we need this for multiple vlans?
+            #(stat_msg, stat_code) = switch.vlan_add(gid=group.gid, system=group.system)
+            (stat_msg, stat_code) = switch.vlan_add()
         else:
-            (rc, out, err) = group.group_mod(gid=group.gid)
+            (stat_msg, stat_code) = switch.vlan_add()
+            # Should we have separate function just to change switch name?
+            #(rc, out, err) = group.group_mod(gid=group.gid)
 
-        if rc is not None and rc != 0:
-            module.fail_json(name=group.name, msg=err)
+        # Believe we just need status code check
+        #if rc is not None and rc != 0:
+        if stat_code != 0:
+            module.fail_json(name=switch.vlan, msg=stat_msg)
 
-    if rc is None:
+    if stat_code is None:
         result['changed'] = False
     else:
         result['changed'] = True
-    if out:
-        result['stdout'] = out
-    if err:
-        result['stderr'] = err
+    if stat_code == 0:
+        result['stdout'] = stat_msg
+    else:
+        result['stderr'] = stat_msg
 
     if switch.vlan_exists():
-        info = group.group_info()
-        result['system'] = group.system
-        result['gid'] = info[2]
+        result['vlan'] = switch.vlan
+        result['name'] = switch.vlan_name()
 
     module.exit_json(**result)
 
