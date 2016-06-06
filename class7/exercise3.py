@@ -106,6 +106,18 @@ class Switch(object):
         else:
             return False
     
+    def vlan_name_ok(self):
+        '''Check if VLAN's name on switch matches passed name.'''
+        output = vlan_get(self.conn)
+
+        switch_vlan_name = output[self.vlan]['name']
+        # VLAN name matches
+        if self.name == switch_vlan_name:
+            return True
+        # VLAN name doesn't match
+        else:
+            return False
+
     def named_vlan_exists(self, check1):
         '''Check if a VLAN exists on switch.'''
         output = vlan_get(self.conn)
@@ -127,14 +139,16 @@ class Switch(object):
            - Support both creating VLAN ID and its Name
            - Only add VLAN if it isn't yet defined on switch
            - Supported VLAN ID range is from VLAN_MIN-VLAN_MAX'''
+        chg_vlan_name = False
     
         if not self.vlan_exists():
             cmds = ['vlan {}'.format(self.vlan)]
-            if self.name:
+            if self.name and not self.vlan_name_ok():
                 cmds.append('name {}'.format(self.name))
+                chg_vlan_name = True
             ### Need to check for errors
             output = self.conn.config(cmds)
-            if self.name:
+            if chg_vlan_name:
                 if output != [{}, {}]:
                     status = 'Error occurred while adding VLAN {}, name {}:\n{}'.format(self.vlan,
                              self.name, output)
@@ -146,7 +160,7 @@ class Switch(object):
             return ('Successful', 0)
         else:
             status = 'VLAN already exists on switch - aborting...'
-            return (status, -1)
+            return (status, 0)
     
     def vlan_remove(self, check1):
         '''Remove a VLAN from switch:
@@ -172,7 +186,7 @@ class Switch(object):
             return ('Successful', 0)
         else:
             status = "VLAN doesn't exist on switch - aborting..."
-            return (status, -1)
+            return (status, 0)
 
 def main():
     module = AnsibleModule(
@@ -192,18 +206,20 @@ def main():
     out = ''
     err = ''
     result = {}
-    result['name'] = group.name
-    result['state'] = group.state
+    result['name'] = switch.name
+    result['state'] = switch.state
 
+    # Want VLAN Removed
     if switch.state == 'absent':
 
         if switch.vlan_exists():
             if module.check_mode:
                 module.exit_json(changed=True)
-            (rc, out, err) = group.group_del()
+            (rc, out, err) = switch.vlan_remove()
             if rc != 0:
                 module.fail_json(name=group.name, msg=err)
 
+    # Want VLAN Added
     elif switch.state == 'present':
 
         if not switch.vlan_exists():
