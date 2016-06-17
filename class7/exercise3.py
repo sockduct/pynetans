@@ -137,7 +137,7 @@ class Switch(object):
     
         if not self.vlan_exists() or not self.vlan_name_ok():
             if change_audit:
-                return (True, 0)
+                return True
             cmds = ['vlan {}'.format(self.vlan)]
             #if self.name and not self.vlan_name_ok():
             if not self.vlan_name_ok():
@@ -157,7 +157,7 @@ class Switch(object):
             return ('Successful', 0)
         else:
             if change_audit:
-                return (False, 0)
+                return False
             status = 'VLAN already exists on switch and name is OK - no change...'
             # Use stat_code of None to indicate no change
             return (status, None)
