@@ -37,12 +37,12 @@ def main(args):
     django.setup()
     start_time = datetime.now()
     net_devs = NetworkDevice.objects.all()
+    cmd = 'show version'
 
     for ndev in net_devs:
         conn = ConnectHandler(device_type=ndev.device_type, ip=ndev.ip_address,
                               username=ndev.credentials.username,
                               password=ndev.credentials.password, port=ndev.port)
-        cmd = 'show version'
         result = conn.send_command_expect(cmd)
         print '\n{} on {}:'.format(cmd, ndev.device_name)
         print '=' * 80 + '\n{}\n'.format(result) + '=' * 80
