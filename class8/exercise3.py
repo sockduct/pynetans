@@ -1,0 +1,1 @@
+/home/jsmall/DJANGOX/djproject/net_system/add_temp_devs.py
