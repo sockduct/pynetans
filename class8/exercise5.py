@@ -42,10 +42,10 @@ def main(args):
         conn = ConnectHandler(device_type=ndev.device_type, ip=ndev.ip_address,
                               username=ndev.credentials.username,
                               password=ndev.credentials.password, port=ndev.port)
-        cmd = 'show arp'
+        cmd = 'show version'
         result = conn.send_command_expect(cmd)
         print '\n{} on {}:'.format(cmd, ndev.device_name)
-        print '-' * 80 + '\n{}\n'.format(result) + '-' * 80
+        print '=' * 80 + '\n{}\n'.format(result) + '=' * 80
 
     end_time = datetime.now()
     print '\nEllapsed time:  {}\n'.format(end_time - start_time)
