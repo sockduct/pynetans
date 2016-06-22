@@ -1,5 +1,17 @@
 #!/usr/bin/env python
 #
+class MyClass(object):
+    def __init__(self, arg1, arg2, arg3):
+        self.arg1 = arg1
+        self.arg2 = arg2
+        self.arg3 = arg3
+
+    def hello(self):
+        print 'Hello {}, {} and {}!'.format(self.arg1, self.arg2, self.arg3)
+
+    def not_hello(self):
+        print 'Goodbye {}, {} and {}!'.format(self.arg1, self.arg2, self.arg3)
+
 def func1(mycaller='function call'):
     print 'World domination! --brought to you by {}'.format(mycaller)
 
