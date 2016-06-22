@@ -13,6 +13,10 @@ class MyClass(object):
         print 'Goodbye {}, {} and {}!'.format(self.arg1, self.arg2, self.arg3)
 
 class MyChildClass(MyClass):
+    def __init__(self, arg1, arg2, arg3):
+        super(MyChildClass, self).__init__(arg1, arg2, arg3)
+        self.language = 'Polish'
+
     def hello(self):
         print 'Mowisz po polsku?  Dzien dobry {}, {} i {}!'.format(self.arg1, self.arg2, self.arg3)
 
