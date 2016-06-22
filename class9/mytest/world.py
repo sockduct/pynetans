@@ -12,6 +12,10 @@ class MyClass(object):
     def not_hello(self):
         print 'Goodbye {}, {} and {}!'.format(self.arg1, self.arg2, self.arg3)
 
+class MyChildClass(MyClass):
+    def hello(self):
+        print 'Mowisz po polsku?  Dzien dobry {}, {} i {}!'.format(self.arg1, self.arg2, self.arg3)
+
 def func1(mycaller='function call'):
     print 'World domination! --brought to you by {}'.format(mycaller)
 
