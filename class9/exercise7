@@ -1,0 +1,75 @@
+# script created with script command
+# output post-processed with:
+# cat <file> | perl -pe 's/\e([^\[\]]|\[.*?[a-zA-Z]|\].*?\a)//g' | col -b > <filea>
+# Retrieved from superuser.com thread
+#
+Script started on Wed 22 Jun 2016 04:32:05 PM PDT
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 class9]$ echo $PYTHONPATH
+/home/jsmall/DJANGOX/djproject/
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 class9]$ l
+exercise7  mytest/
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 class9]$ cd ..
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 pynetans]$ l
+ansible/  class2/  class4/  class6/  class8/  README.md	    test/
+class1/	  class3/  class5/  class7/  class9/  template.py*
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 pynetans]$ python
+Python 2.7.10 (default, Dec  8 2015, 18:25:23)
+[GCC 4.8.3 20140911 (Red Hat 4.8.3-9)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import mytest
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ImportError: No module named mytest
+>>>
+>>> import sys
+>>> from pprint import pprint
+>>> pprint(sys.path)
+['',
+ '/home/jsmall/DJANGOX/djproject',
+ '/home/jsmall/applied_python/local/lib64/python2.7/site-packages',
+ '/home/jsmall/applied_python/local/lib/python2.7/site-packages',
+ '/home/jsmall/applied_python/lib64/python2.7',
+ '/home/jsmall/applied_python/lib/python2.7',
+ '/home/jsmall/applied_python/lib64/python2.7/site-packages',
+ '/home/jsmall/applied_python/lib/python2.7/site-packages',
+ '/home/jsmall/applied_python/lib64/python2.7/lib-dynload',
+ '/usr/lib64/python2.7',
+ '/usr/lib/python2.7']
+>>>
+>>> quit()
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 pynetans]$
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 pynetans]$ export PYTHONPATH=$PYTHONPATH:~/pynetans/class9
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 pynetans]$
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 pynetans]$ python
+Python 2.7.10 (default, Dec  8 2015, 18:25:23)
+[GCC 4.8.3 20140911 (Red Hat 4.8.3-9)] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import mytest
+World domination! --brought to you by main program importation
+Successfully imported mytest.world.
+Did you expect something profound? --brought to you by main program importation
+Successfully imported mytest.simple.
+Why are you calling me? --brought to you by main program importation
+Successfully imported mytest.whatever.
+>>>
+>>> import sys
+>>> from pprint import pprint
+>>> pprint(sys.path)
+['',
+ '/home/jsmall/DJANGOX/djproject',
+ '/home/jsmall/pynetans/class9',
+ '/home/jsmall/applied_python/local/lib64/python2.7/site-packages',
+ '/home/jsmall/applied_python/local/lib/python2.7/site-packages',
+ '/home/jsmall/applied_python/lib64/python2.7',
+ '/home/jsmall/applied_python/lib/python2.7',
+ '/home/jsmall/applied_python/lib64/python2.7/site-packages',
+ '/home/jsmall/applied_python/lib/python2.7/site-packages',
+ '/home/jsmall/applied_python/lib64/python2.7/lib-dynload',
+ '/usr/lib64/python2.7',
+ '/usr/lib/python2.7']
+>>>
+>>> dir()
+['__builtins__', '__doc__', '__name__', '__package__', 'mytest', 'pprint', 'sys']
+>>> quit()
+(applied_python)(applied_python)[jsmall@ip-172-30-0-38 pynetans]$ exit
+Script done on Wed 22 Jun 2016 04:33:37 PM PDT
