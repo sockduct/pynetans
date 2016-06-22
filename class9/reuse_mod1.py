@@ -1,4 +1,7 @@
+#!/usr/bin/env python
+#
 # Based on class 9 lectures
+#
 
 import sys
 
