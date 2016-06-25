@@ -20,8 +20,6 @@ import yaml
 # Note:  Consider using function/class/method default parameters instead of global constants where
 # it makes sense
 #BASE_FILE = 'file1'
-DEV_IP = '184.105.247.76'
-DEV_NCP = '830'
 SRX_FILE = 'srx1.yaml'
 TIMEOUT = 60
 
@@ -44,7 +42,7 @@ def yaml_input(file1, verbose=False):
             data1 = yaml.load(fh1)
     else:
         # Don't output error if using default file name
-        if verbose and file1 != ROUTER_FILE:
+        if verbose and file1 != SRX_FILE:
             print 'Error:  Invalid filename {}'.format(file1)
 
     return data1
