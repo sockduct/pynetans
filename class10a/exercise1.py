@@ -90,6 +90,8 @@ def main(args):
     if args.verbose:
         print 'Opening NETCONF connection to {}...'.format(mysrx['HOST'])
     mysrx_conn.open()
+    # Set timeout - default of 30 seconds can be problematic, must set after open()
+    mysrx_conn.timeout = TIMEOUT
 
     print 'Device facts for {}:'.format(mysrx['HOST'])
     pprint(mysrx_conn.facts)
