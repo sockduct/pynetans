@@ -13,7 +13,6 @@ from getpass import getpass
 from jnpr.junos import Device
 from jnpr.junos.op.ethport import EthPortTable
 import os
-from pprint import pprint
 import sys
 import yaml
 
@@ -91,13 +90,24 @@ def main(args):
     if args.verbose:
         print 'Opening NETCONF connection to {}...'.format(mysrx['HOST'])
     mysrx_conn.open()
+    # Set timeout - default of 30 seconds can be problematic, must set after open()
+    mysrx_conn.timeout = TIMEOUT
+
     ethports = EthPortTable(mysrx_conn)
     if args.verbose:
         print 'Gathering EthPortTable info from {}...'.format(mysrx['HOST'])
     ethports.get()
 
     print 'Device Ethernet Port information for {}:'.format(mysrx['HOST'])
-    pprint(ethports.items())
+    for int_key in ethports.keys():
+        print '{}:'.format(int_key)
+        for int_subkey in ethports[int_key].keys():
+            if int_subkey == 'oper':
+                print '  \\Operational Status:   {}'.format(ethports[int_key][int_subkey])
+            elif int_subkey == 'rx_packets':
+                print '  \\Received Packets:     {}'.format(ethports[int_key][int_subkey])
+            elif int_subkey == 'tx_packets':
+                print '  \\Transmitted Packets:  {}'.format(ethports[int_key][int_subkey])
     mysrx_conn.close()
 
 # Call main and put all logic there per best practices.
