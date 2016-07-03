@@ -1,0 +1,15 @@
+---
+- name: Change Juniper SRX hostname using Ansible
+  hosts: pynet-sf-srx
+  tasks:
+    - name: Verifying NETCONF
+      wait_for: host={{ ansible_ssh_host }} port=830
+
+    - name: Change hostname
+      junos_install_config:
+        host={{ ansible_ssh_host }}
+        file=chg_hostname.xml
+        overwrite=false
+        user={{ juniper_user }}
+        passwd={{ juniper_passwd }}
+
