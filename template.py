@@ -3,8 +3,23 @@
 #
 # Template based on recommendations from Matt Harrison in Beginning Python Programming
 #
+# Progressively updated:  v0.0.6
+# Last change:  August 11, 2016
+#
 '''<program description> - triple quotes should end on this line if on liner...
 '''
+
+# Future Imports - Must be first, provides Python 2/3 interoperability
+from __future__ import print_function       # print(<strings...>, file=sys.stdout, end='\n')
+from __future__ import division             # 3/2 == 1.5, 3//2 == 1
+from __future__ import absolute_import      # prevent implicit relative imports in v2.x
+# This one more risky...
+from __future__ import unicode_literals     # all string literals treated as unicode strings
+# Enforce things required in v3.x:  https://docs.python.org/2/library/__future__.html
+# See http://python-future.org/compatible_idioms.html
+
+# For future consideration:
+#from builtins import *
 
 # Imports
 # Delete unused lines/comments!
@@ -54,8 +69,17 @@ if __name__ == '__main__':
 ####################################################################################################
 # Post coding
 #
+# Only test for Python 3 compatibility:  pylint --py3k <script>.py
 # pylint <script>.py
 #   Score should be >= 8.0
+#
+# python warning options:
+# * -Qwarnall - Believe check for old division usage
+# * -t - issue warnings about inconsitent tab usage
+# * -3 - warn about Python 3.x incompatibilities
+#
+# python3 warning options:
+# * -b - issue warnings about mixing strings and bytes
 #
 # Future:
 # * Testing - doctest/unittest/other
