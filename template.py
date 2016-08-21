@@ -3,8 +3,13 @@
 #
 # Template based on recommendations from Matt Harrison in Beginning Python Programming
 #
-# Progressively updated:  v0.0.6
-# Last change:  August 11, 2016
+# Progressively updated:  v0.0.7
+# Last change:  August 20, 2016
+#
+# Save below this line
+#--------------------------------------------------------------------------------------------------
+#
+# Template version used:  0.0.6
 #
 '''<program description> - triple quotes should end on this line if on liner...
 '''
@@ -17,7 +22,7 @@ from __future__ import absolute_import      # prevent implicit relative imports 
 from __future__ import unicode_literals     # all string literals treated as unicode strings
 # Enforce things required in v3.x:  https://docs.python.org/2/library/__future__.html
 # See http://python-future.org/compatible_idioms.html
-
+#
 # For future consideration:
 #from builtins import *
 
