@@ -4,7 +4,7 @@
 # Python version(s) used/tested:
 # * Python 2.7.11 on Windows
 #
-# Template version:  0.0.9
+# Template version used:  0.0.9
 #
 #---------------------------------------------------------------------------------------------------
 #
@@ -16,7 +16,8 @@
 #
 # Template based on recommendations from Matt Harrison in Beginning Python Programming
 #
-# Progressively updated
+# Progressively updated - keep version # below and "template version used" above in sync
+# Current version:  0.0.9
 # Last change:  November 30, 2016
 #
 # Remove all text between --/cut\--\cut/-- lines before publishing
