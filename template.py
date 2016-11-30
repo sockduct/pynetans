@@ -1,30 +1,47 @@
 #!/usr/bin/env python
 ####################################################################################################
 #
+# Python version(s) used/tested:
+# * Python 2.7.11 on Windows
+#
+# Template version:  0.0.9
+#
+#---------------------------------------------------------------------------------------------------
+#
+# Issues/PLanned Improvements:
+# * <first>
+# * <second>...
+#
+#----------------------------------------------/cut\------------------------------------------------
+#
 # Template based on recommendations from Matt Harrison in Beginning Python Programming
 #
-# Progressively updated:  v0.0.7
-# Last change:  August 20, 2016
+# Progressively updated
+# Last change:  November 30, 2016
 #
-# Save below this line
-#--------------------------------------------------------------------------------------------------
+# Remove all text between --/cut\--\cut/-- lines before publishing
 #
-# Template version used:  0.0.6
-#
-'''<program description> - triple quotes should end on this line if on liner...
+#----------------------------------------------\cut/------------------------------------------------
+'''<module/program description> - triple quotes should end on this line if on liner...
 '''
 
 # Future Imports - Must be first, provides Python 2/3 interoperability
 from __future__ import print_function       # print(<strings...>, file=sys.stdout, end='\n')
+#----------------------------------------------/cut\------------------------------------------------
+                                            # Python 2: print 'No newline',  # without __future__
+                                            # Python 3: print('No newline', end='')
+#----------------------------------------------\cut/------------------------------------------------
 from __future__ import division             # 3/2 == 1.5, 3//2 == 1
 from __future__ import absolute_import      # prevent implicit relative imports in v2.x
 # This one more risky...
 from __future__ import unicode_literals     # all string literals treated as unicode strings
+#----------------------------------------------/cut\------------------------------------------------
 # Enforce things required in v3.x:  https://docs.python.org/2/library/__future__.html
 # See http://python-future.org/compatible_idioms.html
 #
 # For future consideration:
 #from builtins import *
+#----------------------------------------------\cut/------------------------------------------------
 
 # Imports
 # Delete unused lines/comments!
@@ -43,6 +60,9 @@ __date__ = 'Month Day, Year'
 __version__ = '0.0.1'
 
 
+#----------------------------------------------/cut\------------------------------------------------
+# Remove any unused constructs - class/def examples
+#----------------------------------------------\cut/------------------------------------------------
 #class Myclass1(object):
     '''<description>'''
 
@@ -63,14 +83,18 @@ def main(args):
     # Do stuff...
 
 # Call main and put all logic there per best practices.
+#----------------------------------------------/cut\------------------------------------------------
 # No triple quotes here because not a function!
+#----------------------------------------------\cut/------------------------------------------------
 if __name__ == '__main__':
+#----------------------------------------------/cut\------------------------------------------------
     # Recommended by Matt Harrison in Beginning Python Programming
     # sys.exit(main(sys.argv[1:]) or 0)
     # Simplied version recommended by Kirk Byers
+#----------------------------------------------\cut/------------------------------------------------
     main(sys.argv[1:])
 
-
+#----------------------------------------------/cut\------------------------------------------------
 ####################################################################################################
 # Post coding
 #
@@ -90,4 +114,5 @@ if __name__ == '__main__':
 # * Testing - doctest/unittest/other
 # * Logging
 #
+#----------------------------------------------\cut/------------------------------------------------
 
