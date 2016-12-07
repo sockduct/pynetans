@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+# -*- coding: ascii -*-
+# Default is ascii - explicitly coding, could also consider utf-8, latin-1, cp1252, ...
 ####################################################################################################
 #
 # Python version(s) used/tested:
 # * Python 2.7.11 on Windows
 #
-# Template version used:  0.0.9
+# Template version used:  0.1.0
 #
 #---------------------------------------------------------------------------------------------------
 #
