@@ -4,9 +4,20 @@
 ####################################################################################################
 #
 # Python version(s) used/tested:
-# * Python 2.7.11 on Windows
+# * Python 2.7.11-32 on Windows 7
+#----------------------------------------------/cut\------------------------------------------------
 #
-# Template version used:  0.1.0
+# Include versions of Python you've tested with, whether it's 32 or 64 bit and which Operating
+# System was hosting.
+# e.g.:
+# * Python 2.7.12-32 on Windows 7
+# * Python 2.7.12-32 on Ubuntu 16.04.1
+# * Python 3.5.1-64 on CentOS 7.1-1503
+# * Python 3.6.0-32 on macOS 10.12
+#
+#----------------------------------------------\cut/------------------------------------------------
+#
+# Template version used:  0.1.1
 #
 #---------------------------------------------------------------------------------------------------
 #
@@ -19,8 +30,8 @@
 # Template based on recommendations from Matt Harrison in Beginning Python Programming
 #
 # Progressively updated - keep version # below and "template version used" above in sync
-# Current version:  0.0.9
-# Last change:  November 30, 2016
+# Current version:  0.1.1
+# Last change:  January 24, 2017
 #
 # Remove all text between --/cut\--\cut/-- lines before publishing
 #
@@ -59,8 +70,8 @@ import sys
 # Metadata
 __author__ = 'James R. Small'
 __contact__ = 'james<dot>r<dot>small<at>outlook<dot>com'
-__date__ = 'Month Day, Year'
-__version__ = '0.0.1'
+__date__ = 'Month Day, Year'    # Date of script creation
+__version__ = '0.0.1'           # Script version number starting with 0.0.1
 
 
 #----------------------------------------------/cut\------------------------------------------------
@@ -114,7 +125,7 @@ if __name__ == '__main__':
 # * -b - issue warnings about mixing strings and bytes
 #
 # Future:
-# * Testing - doctest/unittest/other
+# * Testing - doctest/unittest/pytest/other
 # * Logging
 #
 #----------------------------------------------\cut/------------------------------------------------
